@@ -14,7 +14,19 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@nest-microservices/prisma": ["libs/prisma/src/index.ts"],
+      "@nest-microservices/shared-decorators": [
+        "libs/shared-decorators/src/index.ts"
+      ],
+      "@nest-microservices/shared-guards": ["libs/shared-guards/src/index.ts"],
+      "@nest-microservices/shared-interfaces": [
+        "libs/shared-interfaces/src/index.ts"
+      ],
+      "@nest-microservices/shared-repository": [
+        "libs/shared-repository/src/index.ts"
+      ]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }
