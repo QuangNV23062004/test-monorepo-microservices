@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Verification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .email-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .verify-btn {
+      display: inline-block;
+      padding: 15px 30px;
+      background-color: #28a745;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .verify-btn:hover {
+      background-color: #218838;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    p {
+      color: #666;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="email-container">
+    <h2>Verify Your Email Address</h2>
+    <p>Thank you for signing up! Please click the button below to verify your email address:</p>
+
+    <a href="<%= verificationUrl %>" class="verify-btn">Verify Email</a>
+
+
+  </div>
+</body>
+
+</html>

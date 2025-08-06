@@ -6,10 +6,19 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "@nx/webpack:webpack",
       "options": {
-        "command": "webpack-cli build",
-        "args": ["--node-env=production"]
+        "webpackConfig": "apps/auth-service/webpack.config.js",
+        "outputPath": "dist/apps/auth-service",
+        "main": "apps/auth-service/src/main.ts",
+        "tsConfig": "apps/auth-service/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*.ejs",
+            "input": "apps/auth-service/src/template",
+            "output": "template"
+          }
+        ]
       },
       "configurations": {
         "development": {
