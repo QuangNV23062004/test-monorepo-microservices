@@ -1,19 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../app/prisma/prisma.service';
 import { BaseRepository } from '@nest-microservices/shared-repository';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  birthDate: Date | null;
-  hobby: string;
-  password: string;
-  createdAt: Date;
-  updatedAt: Date;
-  isDeleted: boolean;
-}
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UserRepository extends BaseRepository<User> {

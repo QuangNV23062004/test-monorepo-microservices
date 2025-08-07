@@ -7,9 +7,9 @@ import nodemailer from 'nodemailer';
 import Mail from 'nodemailer/lib/mailer';
 import ejs from 'ejs';
 import * as bcrypt from 'bcrypt';
-import { RoleEnum } from '../enum/role.enum';
+import { RoleEnum } from '@nest-microservices/shared-guards';
 import { RpcException } from '@nestjs/microservices';
-import { Prisma, User } from '@prisma/client';
+import { User } from '@prisma/client';
 const verificationTemplate = path.resolve(
   __dirname,
   './template/verificationEmail.ejs'
@@ -120,7 +120,13 @@ export class AppService {
         location: 'AuthService',
       });
     }
-
+    if (user.isVerify === false) {
+      throw new RpcException({
+        message: 'User has not been verified',
+        code: HttpStatus.BAD_REQUEST,
+        location: 'AuthService',
+      });
+    }
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       throw new RpcException({
@@ -151,6 +157,38 @@ export class AppService {
     return { accessToken, refreshToken };
   };
 
+  reverifyEmail = async (email: string) => {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new RpcException({
+        message: 'User not found',
+        code: HttpStatus.BAD_REQUEST,
+        location: 'AuthService',
+      });
+    }
+
+    if (user.isVerify) {
+      throw new RpcException({
+        message: 'User has already been verified',
+        code: HttpStatus.BAD_REQUEST,
+        location: 'AuthService',
+      });
+    }
+
+    const payload = { email };
+    const secret = this.configService.get<string>('VERIFICATION_SECRET');
+    const expires = this.configService.get<string>('VERIFICATION_EXPIRES_IN');
+    const token = this.generateToken(payload, secret, expires);
+
+    const url = `${this.configService.get<string>(
+      'SERVER_URL'
+    )}/auth/verify-email?token=${token}`;
+
+    await this.sendVerificationEmail(email, url);
+
+    return { message: 'Verification email sent successfully' };
+  };
+
   confirmEmailToken = async (token: string) => {
     const payload = await this.jwtService.verify(token, {
       secret: this.configService.get<string>('VERIFICATION_SECRET'),
@@ -171,14 +209,21 @@ export class AppService {
     }
 
     // Create the user in database after successful verification
-    const user = await this.userRepository.create({
-      email: payload.email,
-      name: payload.name,
-      birthDate: payload.birthDate,
-      hobby: payload.hobby,
-      password: hashedPassword,
-      role: userRole,
-    });
+    let user = await this.userRepository.findByEmail(payload.email);
+    if (!user) {
+      user = await this.userRepository.create({
+        email: payload.email,
+        name: payload.name,
+        birthDate: payload.birthDate,
+        hobby: payload.hobby,
+        password: hashedPassword,
+        role: userRole,
+      });
+    } else if (user && user.isVerify === false) {
+      await this.userRepository.updateById(user.id, {
+        isVerify: true,
+      });
+    }
 
     return { message: 'Email verified successfully', userId: user.id };
   };

@@ -1,12 +1,16 @@
 import { Module } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { SharedModule } from '@nest-microservices/shared-guards';
+import { ClientConfigsMap } from '../../utils/client-register';
 
 @Module({
   imports: [
     ClientsModule.register([
-      { name: 'USER_SERVICE', transport: Transport.TCP },
+      ClientConfigsMap['AUTH_SERVICE'],
+      ClientConfigsMap['USER_SERVICE'],
     ]),
+    SharedModule,
   ],
   controllers: [UserController],
 })

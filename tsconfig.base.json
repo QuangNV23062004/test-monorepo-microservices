@@ -15,7 +15,6 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@nest-microservices/prisma": ["libs/prisma/src/index.ts"],
       "@nest-microservices/shared-decorators": [
         "libs/shared-decorators/src/index.ts"
       ],

@@ -24,6 +24,7 @@ model User {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   isDeleted Boolean   @default(false)
+  isVerify  Boolean   @default(true)
 
   @@map("users")
 }

@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
+import BaseRepository from './base.repository';
 
 @Module({
   controllers: [],
   providers: [],
-  exports: [],
+  exports: [BaseRepository],
 })
 export class SharedRepositoryModule {}
