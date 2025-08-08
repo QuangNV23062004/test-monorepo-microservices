@@ -10,7 +10,6 @@ import { ClientConfigsMap } from '../../utils/client-register';
       ClientConfigsMap['AUTH_SERVICE'],
       ClientConfigsMap['USER_SERVICE'],
     ]),
-    SharedModule,
   ],
   controllers: [UserController],
 })

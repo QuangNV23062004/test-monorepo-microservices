@@ -15,10 +15,11 @@ import {
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { UpdateUserDto } from '../../dto/users/update-user.dto';
+import { UpdateUserDto } from './dtos/update-user.dto';
 import { AuthGuard, RoleEnum } from '@nest-microservices/shared-guards';
 import { RoleGuard } from '@nest-microservices/shared-guards';
 import { Roles } from '@nest-microservices/shared-decorators';
+import { errorHandler } from '../../utils/error-handler';
 
 @Controller('users')
 @UseGuards(AuthGuard, RoleGuard)
@@ -31,25 +32,22 @@ export class UserController {
   @Roles(RoleEnum.ADMIN)
   async findAll() {
     try {
-      return await firstValueFrom(this.userClient.send('user.find-all', {}));
+      return await firstValueFrom(this.userClient.send('user.find-users', {}));
     } catch (error) {
-      throw new HttpException(
-        error.message || 'Failed to fetch users',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+      errorHandler(error, 'user', 'Failed to find all users');
     }
   }
 
   @Get(':id')
-  @Roles(RoleEnum.USER)
-  async findById(@Param('id') id: string) {
+  @Roles(RoleEnum.ADMIN, RoleEnum.USER)
+  async findById(@Param('id') id: string, @Req() req: IAuthenticatedRequest) {
     try {
-      return await firstValueFrom(this.userClient.send('user.find-by-id', id));
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Failed to fetch user',
-        HttpStatus.NOT_FOUND
+      const requesterId = req?.user?.userId;
+      return await firstValueFrom(
+        this.userClient.send('user.find-user', { id, requesterId })
       );
+    } catch (error) {
+      errorHandler(error, 'user', 'Failed to find user by id');
     }
   }
 
@@ -64,17 +62,21 @@ export class UserController {
     @Query('sortBy') sortBy: string,
     @Query('options') options: Record<string, any>
   ) {
-    return await firstValueFrom(
-      this.userClient.send('user.find-users-with-pagination', {
-        page,
-        size,
-        search,
-        searchField,
-        order,
-        sortBy,
-        options,
-      })
-    );
+    try {
+      return await firstValueFrom(
+        this.userClient.send('user.find-users-with-pagination', {
+          page,
+          size,
+          search,
+          searchField,
+          order,
+          sortBy,
+          options,
+        })
+      );
+    } catch (error) {
+      errorHandler(error, 'user', 'Failed to find user with pagination');
+    }
   }
 
   @Patch(':id')
@@ -84,24 +86,32 @@ export class UserController {
     @Param('id') id: string,
     @Req() req: IAuthenticatedRequest
   ) {
-    const requesterId = req.user.userId;
-    return await firstValueFrom(
-      this.userClient.send('user.update', {
-        ...updateUserDto,
-        id,
-        requesterId,
-      })
-    );
+    try {
+      const requesterId = req?.user?.userId;
+      return await firstValueFrom(
+        this.userClient.send('user.update', {
+          ...updateUserDto,
+          id,
+          requesterId,
+        })
+      );
+    } catch (error) {
+      errorHandler(error, 'user', 'Failed to update user');
+    }
   }
 
   @Delete(':id')
   @Roles(RoleEnum.ADMIN)
   async delete(@Param('id') id: string, @Req() req: IAuthenticatedRequest) {
-    return await firstValueFrom(
-      this.userClient.send('user.delete', {
-        id,
-        requesterId: req.user.userId,
-      })
-    );
+    try {
+      return await firstValueFrom(
+        this.userClient.send('user.delete', {
+          id,
+          requesterId: req.user.userId,
+        })
+      );
+    } catch (error) {
+      errorHandler(error, 'user', 'Failed to delete user');
+    }
   }
 }

@@ -1,0 +1,9 @@
+{
+  "name": "shared-enum",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared-enum/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project shared-enum --web",
+  "targets": {}
+}

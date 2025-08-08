@@ -18,6 +18,7 @@
       "@nest-microservices/shared-decorators": [
         "libs/shared-decorators/src/index.ts"
       ],
+      "@nest-microservices/shared-enum": ["libs/shared-enum/src/index.ts"],
       "@nest-microservices/shared-guards": ["libs/shared-guards/src/index.ts"],
       "@nest-microservices/shared-interfaces": [
         "libs/shared-interfaces/src/index.ts"

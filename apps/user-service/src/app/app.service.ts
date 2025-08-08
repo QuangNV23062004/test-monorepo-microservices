@@ -95,7 +95,7 @@ export class AppService {
 
     if (name) updateData = { ...updateData, name };
     if (birthDate && new Date(birthDate) < new Date())
-      updateData = { ...updateData, birthDate };
+      updateData = { ...updateData, birthDate: new Date(birthDate) };
     if (hobby) updateData = { ...updateData, hobby };
     if (email) {
       const existingUser = await this.userRepository.findByEmail(email);

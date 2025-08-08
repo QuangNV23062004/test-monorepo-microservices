@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { RpcException } from '@nestjs/microservices';
 import { Request } from 'express';
 import { IAuthenticatedRequest } from '@nest-microservices/shared-interfaces';
-import { RoleEnum } from './enum/role.enum';
+import { RoleEnum } from '@nest-microservices/shared-enum';
 import { ROLES_KEY } from '@nest-microservices/shared-decorators';
 import { Reflector } from '@nestjs/core';
 @Injectable()

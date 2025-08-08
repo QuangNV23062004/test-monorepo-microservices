@@ -103,9 +103,9 @@ export default abstract class BaseRepository<T> {
 
   async getById(id: string): Promise<T | null> {
     try {
-      return await this.model.findUnique({
+      return await this.model.findFirst({
         where: {
-          id,
+          id: id,
           isDeleted: false,
         },
       });
@@ -133,12 +133,20 @@ export default abstract class BaseRepository<T> {
 
   async updateById(id: string, data: Record<string, any>): Promise<T | null> {
     try {
-      return await this.model.update({
+      await this.model.updateMany({
         where: {
           id: id,
           isDeleted: false,
         },
         data: data,
+      });
+
+      // Return the updated record
+      return await this.model.findFirst({
+        where: {
+          id: id,
+          isDeleted: false,
+        },
       });
     } catch (error) {
       throw new Error(
@@ -151,7 +159,7 @@ export default abstract class BaseRepository<T> {
 
   async deleteById(id: string): Promise<boolean> {
     try {
-      await this.model.update({
+      await this.model.updateMany({
         where: {
           id: id,
           isDeleted: false,

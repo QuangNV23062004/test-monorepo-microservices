@@ -46,7 +46,13 @@ export class AppService {
       });
     }
 
-    const payload = { email, name, birthDate, hobby, password };
+    const payload = {
+      email,
+      name,
+      birthDate: new Date(birthDate),
+      hobby,
+      password,
+    };
     const secret = this.configService.get<string>('VERIFICATION_SECRET');
     const expires = this.configService.get<string>('VERIFICATION_EXPIRES_IN');
     const token = this.generateToken(payload, secret, expires);
@@ -194,23 +200,22 @@ export class AppService {
       secret: this.configService.get<string>('VERIFICATION_SECRET'),
     });
 
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(payload.password, salt);
-
-    const countSystemUsers = await this.userRepository.getAllWithPagination(
-      1,
-      1
-    );
-
-    //ensure first user is admin
-    let userRole = RoleEnum.USER;
-    if (countSystemUsers.data.length === 0) {
-      userRole = RoleEnum.ADMIN;
-    }
-
     // Create the user in database after successful verification
     let user = await this.userRepository.findByEmail(payload.email);
     if (!user) {
+      const salt = await bcrypt.genSalt();
+      const hashedPassword = await bcrypt.hash(payload.password, salt);
+
+      const countSystemUsers = await this.userRepository.getAllWithPagination(
+        1,
+        1
+      );
+
+      //ensure first user is admin
+      let userRole = RoleEnum.USER;
+      if (countSystemUsers.data.length === 0) {
+        userRole = RoleEnum.ADMIN;
+      }
       user = await this.userRepository.create({
         email: payload.email,
         name: payload.name,
@@ -238,7 +243,7 @@ export class AppService {
 
       if (!payload.userId || !payload.role) {
         throw new RpcException({
-          message: 'Invalid refresh token',
+          message: 'Invalid access token',
           code: HttpStatus.BAD_REQUEST,
           location: 'AuthService',
         });
@@ -334,7 +339,7 @@ export class AppService {
 
     if (!payload.userId || !payload.role) {
       throw new RpcException({
-        message: 'Invalid refresh token',
+        message: 'Invalid access token',
         code: HttpStatus.BAD_REQUEST,
         location: 'AuthService',
       });

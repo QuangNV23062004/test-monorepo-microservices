@@ -23,23 +23,33 @@ export const errorHandler = (
   ) => {
     logger.error(`❌ [${errorCode}] ${errorMessage}`);
 
-    // Log additional context for developers
-    if (additionalInfo) {
-      logger.error(
-        `📋 Additional details: ${JSON.stringify(additionalInfo, null, 2)}`
-      );
-    }
-
-    // Log original error structure for debugging
-    if (error && typeof error === 'object') {
-      logger.error(`🔍 Raw error object: ${JSON.stringify(error, null, 2)}`);
-    }
-
     // Log stack trace if available
     if (error instanceof Error && error.stack) {
       logger.error(`📍 Stack trace: ${error.stack}`);
     }
   };
+
+  // NEW: Handle RpcException instances directly
+  if (error instanceof RpcException) {
+    const rpcError = error.getError() as MicroserviceError;
+
+    logError(`${defaultMessage}: ${rpcError.message}`, rpcError.code, {
+      originalMessage: rpcError.message,
+      location: rpcError.location,
+      details: rpcError.details,
+      source: 'RpcException instance',
+    });
+
+    throw new HttpException(
+      {
+        code: rpcError.code,
+        message: rpcError.message,
+        location: rpcError.location || location,
+        ...(rpcError.details && { details: rpcError.details }),
+      },
+      rpcError.code
+    );
+  }
 
   // Handle RpcException errors from microservices
   if (error && typeof error === 'object') {
