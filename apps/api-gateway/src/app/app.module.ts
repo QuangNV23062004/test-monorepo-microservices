@@ -9,6 +9,7 @@ import { UserModule } from './user/user.module';
 import { AuthController } from './auth/auth.controller';
 import { LoggerMiddleware } from '../middleware/logger.middleware';
 import { MicroserviceClients } from '../utils/client-register';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { MicroserviceClients } from '../utils/client-register';
     ClientsModule.register(MicroserviceClients),
     AuthModule,
     UserModule,
+    PaymentModule,
   ],
   controllers: [AppController, AuthController, UserController],
   providers: [AppService],

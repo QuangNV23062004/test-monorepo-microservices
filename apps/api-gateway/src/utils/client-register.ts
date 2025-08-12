@@ -4,6 +4,7 @@ import { ClientsModuleOptions, Transport } from '@nestjs/microservices';
 export const MICROSERVICE_CLIENTS = {
   AUTH_SERVICE: 'AUTH_SERVICE',
   USER_SERVICE: 'USER_SERVICE',
+  PAYMENT_SERVICE: 'PAYMENT_SERVICE',
 } as const;
 
 // Main configuration array
@@ -24,10 +25,18 @@ export const MicroserviceClients: ClientsModuleOptions = [
       port: Number(process.env.USER_SERVICE_PORT) || 3002,
     },
   },
+  {
+    name: MICROSERVICE_CLIENTS.PAYMENT_SERVICE,
+    transport: Transport.TCP,
+    options: {
+      host: process.env.PAYMENT_SERVICE_HOST || 'localhost',
+      port: Number(process.env.PAYMENT_SERVICE_PORT) || 3003,
+    },
+  },
 ];
 
 export const ClientConfigsMap: Record<string, any> = {};
-MicroserviceClients.forEach((client) => {
+(MicroserviceClients as any[]).forEach((client) => {
   ClientConfigsMap[client.name as string] = client;
 });
 

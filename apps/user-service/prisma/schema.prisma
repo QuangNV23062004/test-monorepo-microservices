@@ -14,17 +14,55 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  name      String
-  role      String
-  birthDate DateTime?
-  hobby     String
-  password  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  isDeleted Boolean   @default(false)
-  isVerify  Boolean   @default(true)
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String
+  role          String
+  birthDate     DateTime?
+  hobby         String
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isDeleted     Boolean   @default(false)
+  isVerify      Boolean   @default(true)
+  refundBalance Decimal   @default(0)
+
+  receipts Receipt[] @relation("UserReceipts")
 
   @@map("users")
+}
+
+model Receipt {
+  id                  String        @id @default(uuid())
+  userId              String
+  amount              Decimal
+  currency            String
+  currentExchangeRate Decimal?
+  transactionId       String?
+  paymentMethod       String
+  paymentGateway      String
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  isDeleted           Boolean       @default(false)
+  receiptItems        ReceiptItem[]
+  user                User          @relation("UserReceipts", fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([transactionId])
+  @@map("receipts")
+}
+
+model ReceiptItem {
+  id           String   @id @default(uuid())
+  receiptId    String
+  productId    String
+  quantity     Int
+  pricePerUnit Decimal
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  isDeleted    Boolean  @default(false)
+  receipt      Receipt  @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+  @@index([receiptId])
+  @@map("receipt_items")
 }

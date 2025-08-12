@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model receipt_items {
+  id           String   @id
+  receiptId    String
+  productId    String
+  quantity     Int
+  pricePerUnit Decimal
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  isDeleted    Boolean  @default(false)
+  receipts     receipts @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+  @@index([receiptId])
+}
+
+model receipts {
+  id                  String          @id
+  userId              String
+  amount              Decimal
+  currency            String
+  currentExchangeRate Decimal?
+  transactionId       String?
+  paymentMethod       String
+  paymentGateway      String
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime
+  isDeleted           Boolean         @default(false)
+  receipt_items       receipt_items[]
+  users               users           @relation(fields: [userId], references: [id])
+
+  @@index([transactionId])
+  @@index([userId])
+}
+
+model users {
+  id            String     @id
+  email         String     @unique
+  name          String
+  role          String
+  birthDate     DateTime?
+  hobby         String
+  password      String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime
+  isDeleted     Boolean    @default(false)
+  isVerify      Boolean    @default(true)
+  refundBalance Decimal    @default(0)
+  receipts      receipts[]
+}

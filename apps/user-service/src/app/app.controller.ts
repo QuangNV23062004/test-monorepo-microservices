@@ -16,7 +16,7 @@ export class AppController {
       throw new RpcException({
         code: 500,
         message: `${error instanceof Error ? error.message : message}`,
-        location: 'AuthService',
+        location: 'UserService',
       });
     }
   }

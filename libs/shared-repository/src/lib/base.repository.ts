@@ -5,6 +5,7 @@ import { IPaginatedResponse } from '@nest-microservices/shared-interfaces';
 export interface IPrismaService {
   $connect(): Promise<void>;
   $disconnect(): Promise<void>;
+  $transaction<T>(fn: (tx: any) => Promise<T>): Promise<T>;
   [key: string]: any; // For dynamic model access
 }
 
@@ -16,15 +17,25 @@ export default abstract class BaseRepository<T> {
     this.modelName = modelName;
   }
 
-  // Get the specific model delegate from Prisma client
-  protected get model() {
-    return (this.prisma as any)[this.modelName];
+  protected getModel(tx?: IPrismaService) {
+    const client = tx || this.prisma;
+    return (client as any)[this.modelName];
   }
 
-  async getAll(options: Record<string, any> = {}): Promise<Array<T>> {
+  protected get model() {
+    return this.getModel();
+  }
+
+  async getAll(
+    options: Record<string, any> = {},
+    tx?: IPrismaService
+  ): Promise<Array<T>> {
     try {
-      return await this.model.findMany({
-        ...options,
+      const model = this.getModel(tx);
+      return await model.findMany({
+        ...Object.fromEntries(
+          Object.entries(options || {}).filter(([key]) => key !== 'where')
+        ),
         where: {
           ...options?.['where'],
           isDeleted: false,
@@ -44,7 +55,8 @@ export default abstract class BaseRepository<T> {
     searchField?: string,
     order?: 'asc' | 'desc',
     sortBy?: string,
-    options?: Record<string, any>
+    options?: Record<string, any>,
+    tx?: IPrismaService
   ): Promise<IPaginatedResponse> {
     const skip = (page - 1) * size;
 
@@ -77,10 +89,11 @@ export default abstract class BaseRepository<T> {
     }
 
     try {
+      const model = this.getModel(tx);
       // Get data and total count in parallel
       const [data, total] = await Promise.all([
-        this.model.findMany(query),
-        this.model.count({ where: whereClause }),
+        model.findMany(query),
+        model.count({ where: whereClause }),
       ]);
 
       const totalPage = Math.ceil(total / size);
@@ -101,13 +114,22 @@ export default abstract class BaseRepository<T> {
     }
   }
 
-  async getById(id: string): Promise<T | null> {
+  async getById(
+    id: string,
+    options?: Record<string, any>,
+    tx?: IPrismaService
+  ): Promise<T | null> {
     try {
-      return await this.model.findFirst({
+      const model = this.getModel(tx);
+      return await model.findFirst({
         where: {
           id: id,
           isDeleted: false,
+          ...options?.['where'],
         },
+        ...Object.fromEntries(
+          Object.entries(options || {}).filter(([key]) => key !== 'where')
+        ),
       });
     } catch (error) {
       throw new Error(
@@ -116,9 +138,10 @@ export default abstract class BaseRepository<T> {
     }
   }
 
-  async create(data: Record<string, any>): Promise<T> {
+  async create(data: Record<string, any>, tx?: IPrismaService): Promise<T> {
     try {
-      return await this.model.create({
+      const model = this.getModel(tx);
+      return await model.create({
         data: {
           ...data,
           isDeleted: false, // Ensure new records are not deleted
@@ -131,9 +154,14 @@ export default abstract class BaseRepository<T> {
     }
   }
 
-  async updateById(id: string, data: Record<string, any>): Promise<T | null> {
+  async updateById(
+    id: string,
+    data: Record<string, any>,
+    tx?: IPrismaService
+  ): Promise<T | null> {
     try {
-      await this.model.updateMany({
+      const model = this.getModel(tx);
+      await model.updateMany({
         where: {
           id: id,
           isDeleted: false,
@@ -142,7 +170,7 @@ export default abstract class BaseRepository<T> {
       });
 
       // Return the updated record
-      return await this.model.findFirst({
+      return await model.findFirst({
         where: {
           id: id,
           isDeleted: false,
@@ -157,9 +185,10 @@ export default abstract class BaseRepository<T> {
     }
   }
 
-  async deleteById(id: string): Promise<boolean> {
+  async deleteById(id: string, tx?: IPrismaService): Promise<boolean> {
     try {
-      await this.model.updateMany({
+      const model = this.getModel(tx);
+      await model.updateMany({
         where: {
           id: id,
           isDeleted: false,
@@ -174,5 +203,12 @@ export default abstract class BaseRepository<T> {
         }`
       );
     }
+  }
+
+  // Utility method to run operations within a transaction
+  async runInTransaction<R>(
+    operation: (tx: IPrismaService) => Promise<R>
+  ): Promise<R> {
+    return await this.prisma.$transaction(operation);
   }
 }
