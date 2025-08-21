@@ -20,6 +20,7 @@ import { AuthGuard, RoleEnum } from '@nest-microservices/shared-guards';
 import { RoleGuard } from '@nest-microservices/shared-guards';
 import { Roles } from '@nest-microservices/shared-decorators';
 import { errorHandler } from '../../utils/error-handler';
+import { ApiQuery } from '@nestjs/swagger';
 
 @Controller('users')
 @UseGuards(AuthGuard, RoleGuard)
@@ -53,6 +54,52 @@ export class UserController {
 
   @Get()
   @Roles(RoleEnum.ADMIN)
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (starts from 1)',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    description: 'Items per page',
+    example: 10,
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search term',
+  })
+  @ApiQuery({
+    name: 'searchField',
+    required: false,
+    type: String,
+    description: 'Field to search in',
+  })
+  @ApiQuery({
+    name: 'order',
+    required: false,
+    type: String,
+    description: 'Sort order (asc/desc)',
+    example: 'asc',
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    type: String,
+    description: 'Field to sort by',
+    example: 'createdAt',
+  })
+  @ApiQuery({
+    name: 'options',
+    required: false,
+    type: 'object',
+    description: 'Additional filter options',
+  })
   async findUsersWithPagination(
     @Query('page') page: number,
     @Query('size') size: number,

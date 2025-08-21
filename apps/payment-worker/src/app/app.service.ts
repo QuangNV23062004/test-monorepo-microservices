@@ -36,14 +36,26 @@ export class AppService implements OnModuleInit {
     this.logger.log(`Processing payment: ${data.transactionId}`);
 
     let receipt = null;
-
+    let order = null;
     try {
       // Step 1: Create receipt
       receipt = await this.createReceipt(data);
-      this.logger.log(`Receipt created: ${receipt}`);
+      // this.logger.log(`Receipt created: ${receipt}`);
+
+      //Step 2: Create order
+      order = 1;
 
       this.logger.log(`Payment processing completed: ${data.transactionId}`);
     } catch (error) {
+      if (receipt) {
+        await firstValueFrom(
+          this.receiptClient.send('receipt.delete', { receiptId: receipt.id })
+        );
+      }
+
+      if (order) {
+        //Delete order
+      }
       this.logger.error(
         `Payment processing failed: ${data.transactionId}`,
         error

@@ -14,14 +14,26 @@ import { AuthGuard } from '@nest-microservices/shared-guards';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { errorHandler } from '../../utils/error-handler';
-import { IAuthenticatedRequest } from '@nest-microservices/shared-interfaces';
+import {
+  IAuthenticatedRequest,
+  IProductItem,
+} from '@nest-microservices/shared-interfaces';
 import dotenv from 'dotenv';
 dotenv.config();
 @Controller('payment')
 export class PaymentController {
   constructor(
-    @Inject('PAYMENT_SERVICE') private readonly paymentClient: ClientProxy
+    @Inject('PAYMENT_SERVICE') private readonly paymentClient: ClientProxy,
+    @Inject('PRODUCT_SERVICE') private readonly productClient: ClientProxy
   ) {}
+
+  private async checkProductList(productList: IProductItem[]) {
+    await firstValueFrom(
+      this.productClient.send('product.check-product-list', {
+        productList: productList,
+      })
+    );
+  }
 
   @Get('success')
   async renderSuccessPayment() {
@@ -41,6 +53,11 @@ export class PaymentController {
   ) {
     try {
       const userId = request.user?.userId;
+
+      await this.checkProductList(
+        createPaymentDto.productList as IProductItem[]
+      );
+
       const url = await firstValueFrom(
         this.paymentClient.send('payment.momo.create', {
           userId,
@@ -50,7 +67,7 @@ export class PaymentController {
           }/api/payment/momo/return`,
           ipn: `${
             process.env.SERVER_URL || 'http://localhost:3000'
-          }/payment/success`,
+          }/api/payment/success`,
         })
       );
       return { url: url, message: 'Successfully created momo payment url' };

@@ -25,7 +25,8 @@
       ],
       "@nest-microservices/shared-repository": [
         "libs/shared-repository/src/index.ts"
-      ]
+      ],
+      "@nest-microservices/shared-utils": ["libs/shared-utils/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

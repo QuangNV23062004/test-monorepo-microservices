@@ -1,13 +1,22 @@
 import { Controller, Inject, Logger } from '@nestjs/common';
-import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
+import {
+  ClientProxy,
+  MessagePattern,
+  Payload,
+  RpcException,
+} from '@nestjs/microservices';
 import { MomoService } from './momo.service';
 import { IProductItem } from '@nest-microservices/shared-interfaces';
 import { IMomoQuery } from '../../types/IMomoQuery';
+import { firstValueFrom } from 'rxjs';
 
 const logger = new Logger('PaymentService - Momo');
 @Controller('momo')
 export class MomoController {
-  constructor(private readonly momoService: MomoService) {}
+  constructor(
+    private readonly momoService: MomoService,
+    @Inject('PRODUCT_SERVICE') private readonly productService: ClientProxy
+  ) {}
 
   private handleError(error: unknown, message: string) {
     logger.error(error);
@@ -34,6 +43,12 @@ export class MomoController {
     logger.log('Using pattern: payment.momo.create');
 
     try {
+      await firstValueFrom(
+        this.productService.send('product.check-product-list', {
+          productList: data.productList,
+        })
+      );
+
       return this.momoService.createMomoPayment(
         data.userId,
         data.productList,

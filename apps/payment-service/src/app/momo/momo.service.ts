@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { createMomoPayment } from '../../utils/payment.utils';
 import { IProductItem } from '@nest-microservices/shared-interfaces';
-import { RpcException } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 
 const ItemList = [
   {

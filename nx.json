@@ -45,7 +45,9 @@
         "apps/api-gateway-e2e/**/*",
         "apps/payment-service-e2e/**/*",
         "apps/receipt-service-e2e/**/*",
-        "apps/payment-worker-e2e/**/*"
+        "apps/payment-worker-e2e/**/*",
+        "apps/order-service-e2e/**/*",
+        "apps/product-service-e2e/**/*"
       ]
     }
   ]

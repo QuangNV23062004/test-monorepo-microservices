@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ReceiptRepository } from './repository/receipt.repository';
 import { IProductItem, IQuery } from '@nest-microservices/shared-interfaces';
 import { ReceiptItemRepository } from './repository/receipt-item.repository';
 import { PrismaService } from './prisma/prisma.service';
-
+import { RpcException } from '@nestjs/microservices';
+import { RoleEnum } from '@nest-microservices/shared-enum';
 @Injectable()
 export class AppService {
   constructor(
@@ -15,6 +16,15 @@ export class AppService {
   getData(): { message: string } {
     return { message: 'Hello API' };
   }
+  private checkUser = (userId: string, requesterId: string, role: string) => {
+    if (userId !== requesterId && role !== RoleEnum.ADMIN) {
+      throw new RpcException({
+        code: HttpStatus.FORBIDDEN,
+        message: 'Forbidden',
+        location: 'ReceiptService',
+      });
+    }
+  };
 
   getReceipts = async () => {
     return await this.receiptRepository.getAll({
@@ -40,7 +50,13 @@ export class AppService {
     });
   };
 
-  getReceiptsByUserId = async (userId: string, query: IQuery) => {
+  getReceiptsByUserId = async (
+    userId: string,
+    query: IQuery,
+    requesterId: string,
+    role: string
+  ) => {
+    this.checkUser(userId, requesterId, role);
     return await this.receiptRepository.getReceiptsByUserId(userId, query);
   };
 
@@ -76,8 +92,8 @@ export class AppService {
     );
   };
 
-  getReceipt = async (id: string) => {
-    return await this.receiptRepository.getById(id, {
+  getReceipt = async (id: string, requesterId: string, role: string) => {
+    const receipt = await this.receiptRepository.getById(id, {
       include: {
         receiptItems: {
           where: {
@@ -97,6 +113,9 @@ export class AppService {
         },
       },
     });
+
+    this.checkUser(receipt.userId, requesterId, role);
+    return receipt;
   };
 
   createReceipt = async (
@@ -141,7 +160,7 @@ export class AppService {
         tx as any
       );
 
-      console.log(receipt.id);
+      // console.log(receipt.id);
       // Return the created receipt with its items
       const processedReceipt = await this.receiptRepository.getById(
         receipt.id,
@@ -167,8 +186,16 @@ export class AppService {
         tx as any
       );
 
-      console.log(processedReceipt);
+      // console.log(processedReceipt);
       return processedReceipt;
+    });
+  };
+
+  deleteReceipt = async (receiptId: string) => {
+    return this.prisma.$transaction(async (tx) => {
+      await this.receiptRepository.deleteById(receiptId);
+      await this.receiptItemRepository.deleteReceiptItems(receiptId);
+      return true;
     });
   };
 }

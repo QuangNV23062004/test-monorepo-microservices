@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model order_items {
+  id        String   @id
+  orderId   String
+  productId String
+  quantity  Int
+  createdAt DateTime @default(now())
+  isDeleted Boolean  @default(false)
+  updatedAt DateTime
+  orders    orders   @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+}
+
+model orders {
+  id          String        @id
+  userId      String
+  amount      Decimal
+  currency    String
+  receiptId   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
+  isDeleted   Boolean       @default(false)
+  order_items order_items[]
+  receipts    receipts[]
+
+  @@index([receiptId])
+  @@index([userId])
+}
+
+model products {
+  id           String   @id
+  name         String
+  quantity     Int
+  price        Decimal
+  currentPrice Decimal?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  isDeleted    Boolean  @default(false)
+  images       String[] @default([])
+
+  @@index([name])
+}
+
+model receipt_items {
+  id           String   @id
+  receiptId    String
+  productId    String
+  quantity     Int
+  pricePerUnit Decimal
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  isDeleted    Boolean  @default(false)
+  receipts     receipts @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([receiptId])
+}
+
+model receipts {
+  id                  String          @id
+  userId              String
+  amount              Decimal
+  currency            String
+  currentExchangeRate Decimal?
+  transactionId       String?
+  paymentMethod       String
+  paymentGateway      String
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime
+  isDeleted           Boolean         @default(false)
+  orderId             String?
+  receipt_items       receipt_items[]
+  orders              orders?         @relation(fields: [orderId], references: [id])
+  users               users           @relation(fields: [userId], references: [id])
+
+  @@index([transactionId])
+  @@index([userId])
+}
+
+model users {
+  id            String     @id
+  email         String     @unique
+  name          String
+  role          String
+  birthDate     DateTime?
+  hobby         String
+  password      String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime
+  isDeleted     Boolean    @default(false)
+  isVerify      Boolean    @default(true)
+  refundBalance Decimal    @default(0)
+  receipts      receipts[]
+}

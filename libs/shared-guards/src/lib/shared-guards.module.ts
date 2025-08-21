@@ -2,18 +2,11 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AuthGuard } from './auth.guard';
 import { RoleGuard } from './role.guard';
-
+import { getClient } from '@nest-microservices/shared-utils';
 @Module({
   imports: [
     ClientsModule.register([
-      {
-        name: 'AUTH_SERVICE',
-        transport: Transport.TCP,
-        options: {
-          host: 'localhost',
-          port: 3001,
-        },
-      },
+      getClient('AUTH_SERVICE', Transport.TCP, 'localhost', 3001),
     ]),
   ],
   providers: [AuthGuard, RoleGuard],

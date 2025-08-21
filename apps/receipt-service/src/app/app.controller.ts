@@ -38,27 +38,58 @@ export class AppController {
   }
 
   @MessagePattern('receipt.all-with-pagination')
-  async getAllReceiptWithPagination(@Payload() query: IQuery) {
+  async getAllReceiptWithPagination(@Payload() data: { query: IQuery }) {
     logger.log('Using pattern: receipt.all-with-pagination');
     try {
       return this.appService.getAllReceiptWithPagination({
-        page: query.page || 1,
-        size: query.size || 5,
-        search: query.search || '',
-        searchField: query.searchField || '',
-        order: query.order || 'desc',
-        sortBy: query.sortBy || 'createdAt',
+        page: data?.query?.page || 1,
+        size: data?.query?.size || 5,
+        search: data?.query?.search || '',
+        searchField: data?.query?.searchField || '',
+        order: data?.query?.order || 'desc',
+        sortBy: data?.query?.sortBy || 'createdAt',
       });
     } catch (error) {
       this.handleError(error, 'Failed to get receipts with pagination');
     }
   }
 
+  @MessagePattern('receipt.get-receipts-by-userId')
+  async getReceiptByUserId(
+    @Payload()
+    data: {
+      id: string;
+      query: IQuery;
+      requesterId: string;
+      role: string;
+    }
+  ) {
+    logger.log('Using pattern: receipt.get-receipts-by-userId');
+    try {
+      return await this.appService.getReceiptsByUserId(
+        data.id,
+        {
+          page: data?.query?.page || 1,
+          size: data?.query?.size || 5,
+          search: data?.query?.search || '',
+          searchField: data?.query?.searchField || '',
+          order: data?.query?.order || 'desc',
+          sortBy: data?.query?.sortBy || 'createdAt',
+        },
+        data.requesterId,
+        data.role
+      );
+    } catch (error) {
+      this.handleError(error, 'Failed to get receipts by userId');
+    }
+  }
   @MessagePattern('receipt.get-receipt')
-  async getReceipt(@Payload() data: { id: string }) {
+  async getReceipt(
+    @Payload() data: { id: string; requesterId: string; role: string }
+  ) {
     logger.log('Using pattern: receipt.get-receipt');
     try {
-      return this.appService.getReceipt(data.id);
+      return this.appService.getReceipt(data.id, data.requesterId, data.role);
     } catch (error) {
       this.handleError(error, 'Failed to get receipt');
     }
@@ -92,6 +123,17 @@ export class AppController {
       );
     } catch (error) {
       this.handleError(error, 'Failed to create receipt');
+    }
+  }
+
+  @MessagePattern('receipt.delete')
+  async deleteReceipt(@Payload() data: { receiptId: string }) {
+    logger.log('Using pattern: receipt.delete');
+    try {
+      const receiptId = data.receiptId;
+      return await this.appService.deleteReceipt(receiptId);
+    } catch (error) {
+      this.handleError(error, 'Failed to delete receipt');
     }
   }
 }

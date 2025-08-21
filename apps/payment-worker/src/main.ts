@@ -14,8 +14,8 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule);
     await app.init();
     logger.log('🔄 Payment Worker microservice started');
-    logger.log(`💻 Worker PID: ${process.pid}`);
-    logger.log(`⏱️  Worker started at: ${new Date().toISOString()}`);
+    // logger.log(`💻 Worker PID: ${process.pid}`);
+    // logger.log(`⏱️  Worker started at: ${new Date().toISOString()}`);
 
     process.on('SIGTERM', async () => {
       logger.log('SIGTERM received, shutting down gracefully');

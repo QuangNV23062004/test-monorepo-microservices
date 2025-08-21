@@ -19,4 +19,16 @@ export class ReceiptItemRepository extends BaseRepository<ReceiptItem> {
     const model = this.getModel(tx);
     return await model.createMany({ data });
   }
+
+  async deleteReceiptItems(receiptId: string, tx?: IPrismaService) {
+    const model = this.getModel(tx);
+    await model.updateMany({
+      where: { receiptId: receiptId, isDeleted: false },
+      data: {
+        isDeleted: true,
+      },
+    });
+
+    return true;
+  }
 }

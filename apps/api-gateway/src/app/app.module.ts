@@ -10,6 +10,11 @@ import { AuthController } from './auth/auth.controller';
 import { LoggerMiddleware } from '../middleware/logger.middleware';
 import { MicroserviceClients } from '../utils/client-register';
 import { PaymentModule } from './payment/payment.module';
+import { ReceiptController } from './receipt/receipt.controller';
+import { OrderController } from './order/order.controller';
+import { OrderModule } from './order/order.module';
+import { ReceiptModule } from './receipt/receipt.module';
+import { ProductModule } from './product/product.module';
 
 @Module({
   imports: [
@@ -18,8 +23,17 @@ import { PaymentModule } from './payment/payment.module';
     AuthModule,
     UserModule,
     PaymentModule,
+    OrderModule,
+    ReceiptModule,
+    ProductModule,
   ],
-  controllers: [AppController, AuthController, UserController],
+  controllers: [
+    AppController,
+    AuthController,
+    UserController,
+    ReceiptController,
+    OrderController,
+  ],
   providers: [AppService],
 })
 export class AppModule {

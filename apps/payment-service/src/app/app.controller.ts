@@ -14,7 +14,7 @@ export class AppController {
       throw new RpcException({
         code: 500,
         message: `${error instanceof Error ? error.message : message}`,
-        location: 'PaymentService - Momo',
+        location: 'PaymentService',
       });
     }
   }

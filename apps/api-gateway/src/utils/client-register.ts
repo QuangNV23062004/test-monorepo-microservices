@@ -1,3 +1,4 @@
+import { getClient } from '@nest-microservices/shared-utils';
 import { ClientsModuleOptions, Transport } from '@nestjs/microservices';
 
 // Define service names
@@ -5,34 +6,49 @@ export const MICROSERVICE_CLIENTS = {
   AUTH_SERVICE: 'AUTH_SERVICE',
   USER_SERVICE: 'USER_SERVICE',
   PAYMENT_SERVICE: 'PAYMENT_SERVICE',
+  RECEIPT_SERVICE: 'RECEIPT_SERVICE',
+  ORDER_SERVICE: 'ORDER_SERVICE',
+  PRODUCT_SERVICE: 'PRODUCT_SERVICE',
 } as const;
 
 // Main configuration array
 export const MicroserviceClients: ClientsModuleOptions = [
-  {
-    name: MICROSERVICE_CLIENTS.AUTH_SERVICE,
-    transport: Transport.TCP,
-    options: {
-      host: process.env.AUTH_SERVICE_HOST || 'localhost',
-      port: Number(process.env.AUTH_SERVICE_PORT) || 3001,
-    },
-  },
-  {
-    name: MICROSERVICE_CLIENTS.USER_SERVICE,
-    transport: Transport.TCP,
-    options: {
-      host: process.env.USER_SERVICE_HOST || 'localhost',
-      port: Number(process.env.USER_SERVICE_PORT) || 3002,
-    },
-  },
-  {
-    name: MICROSERVICE_CLIENTS.PAYMENT_SERVICE,
-    transport: Transport.TCP,
-    options: {
-      host: process.env.PAYMENT_SERVICE_HOST || 'localhost',
-      port: Number(process.env.PAYMENT_SERVICE_PORT) || 3003,
-    },
-  },
+  getClient(
+    MICROSERVICE_CLIENTS.AUTH_SERVICE,
+    Transport.TCP,
+    'localhost',
+    3001
+  ),
+  getClient(
+    MICROSERVICE_CLIENTS.USER_SERVICE,
+    Transport.TCP,
+    'localhost',
+    3002
+  ),
+  getClient(
+    MICROSERVICE_CLIENTS.PAYMENT_SERVICE,
+    Transport.TCP,
+    'localhost',
+    3003
+  ),
+  getClient(
+    MICROSERVICE_CLIENTS.RECEIPT_SERVICE,
+    Transport.TCP,
+    'localhost',
+    3004
+  ),
+  getClient(
+    MICROSERVICE_CLIENTS.ORDER_SERVICE,
+    Transport.TCP,
+    'localhost',
+    3006
+  ),
+  getClient(
+    MICROSERVICE_CLIENTS.PRODUCT_SERVICE,
+    Transport.TCP,
+    'localhost',
+    3007
+  ),
 ];
 
 export const ClientConfigsMap: Record<string, any> = {};

@@ -3,25 +3,15 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { QueueModule } from './queue/queue.module';
+import { getClient } from '@nest-microservices/shared-utils';
+
 @Module({
   imports: [
     ClientsModule.register([
-      {
-        name: 'RECEIPT_SERVICE',
-        transport: Transport.TCP,
-        options: {
-          host: process.env.RECEIPT_SERVICE_HOST || 'localhost',
-          port: Number(process.env.RECEIPT_SERVICE_PORT) || 3004,
-        },
-      },
-      {
-        name: 'USER_SERVICE',
-        transport: Transport.TCP,
-        options: {
-          host: process.env.USER_SERVICE_HOST || 'localhost',
-          port: Number(process.env.USER_SERVICE_PORT) || 3002,
-        },
-      },
+      getClient('RECEIPT_SERVICE', Transport.TCP, 'localhost', 3004),
+      getClient('USER_SERVICE', Transport.TCP, 'localhost', 3002),
+      getClient('ORDER_SERVICE', Transport.TCP, 'localhost', 3006),
+      getClient('PRODUCT_SERVICE', Transport.TCP, 'localhost', 3007),
     ]),
     QueueModule,
   ],
