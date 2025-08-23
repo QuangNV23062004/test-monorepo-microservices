@@ -34,7 +34,8 @@ export class AppService {
     name: string,
     birthDate: Date,
     hobby: string,
-    password: string
+    password: string,
+    redirectUrl: string
   ): Promise<{ message: string }> => {
     // Check if user already exists
     const existingUser = await this.userRepository.findByEmail(email);
@@ -57,9 +58,7 @@ export class AppService {
     const expires = this.configService.get<string>('VERIFICATION_EXPIRES_IN');
     const token = this.generateToken(payload, secret, expires);
 
-    const url = `${this.configService.get<string>(
-      'SERVER_URL'
-    )}/auth/verify-email?token=${token}`;
+    const url = `${redirectUrl}?token=${token}`;
 
     await this.sendVerificationEmail(email, url);
 
@@ -163,7 +162,7 @@ export class AppService {
     return { accessToken, refreshToken };
   };
 
-  reverifyEmail = async (email: string) => {
+  reverifyEmail = async (email: string, redirectUrl: string) => {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
       throw new RpcException({
@@ -186,9 +185,7 @@ export class AppService {
     const expires = this.configService.get<string>('VERIFICATION_EXPIRES_IN');
     const token = this.generateToken(payload, secret, expires);
 
-    const url = `${this.configService.get<string>(
-      'SERVER_URL'
-    )}/auth/verify-email?token=${token}`;
+    const url = `${redirectUrl}?token=${token}`;
 
     await this.sendVerificationEmail(email, url);
 

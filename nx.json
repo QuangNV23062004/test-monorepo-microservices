@@ -15,7 +15,8 @@
     ],
     "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
   },
-  "nxCloudId": "6891b9e51df881552069e897",
+  "nxCloudId": null,
+  "nxCloudAccessToken": null,
   "plugins": [
     {
       "plugin": "@nx/webpack/plugin",
@@ -41,7 +42,12 @@
       "exclude": [
         "apps/auth-service-e2e/**/*",
         "apps/user-service-e2e/**/*",
-        "apps/api-gateway-e2e/**/*"
+        "apps/api-gateway-e2e/**/*",
+        "apps/payment-service-e2e/**/*",
+        "apps/receipt-service-e2e/**/*",
+        "apps/payment-worker-e2e/**/*",
+        "apps/order-service-e2e/**/*",
+        "apps/product-service-e2e/**/*"
       ]
     }
   ]

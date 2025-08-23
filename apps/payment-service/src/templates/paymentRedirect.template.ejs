@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Receipt</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #1e293b;
+      padding: 20px;
+    }
+
+    .container {
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      border-radius: 24px;
+      box-shadow:
+        0 25px 50px rgba(0, 0, 0, 0.08),
+        0 8px 32px rgba(34, 197, 94, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      padding: 48px 40px;
+      max-width: 640px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      backdrop-filter: blur(16px);
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    .success-container {
+      border: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .failure-container {
+      border: 1px solid rgba(239, 68, 68, 0.15);
+    }
+
+    .success-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #22c55e, #16a34a, #15803d);
+      border-radius: 24px 24px 0 0;
+    }
+
+    .failure-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #ef4444, #dc2626, #b91c1c);
+      border-radius: 24px 24px 0 0;
+    }
+
+    .success-glow {
+      position: absolute;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(34, 197, 94, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      z-index: -1;
+    }
+
+    .failure-glow {
+      position: absolute;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      z-index: -1;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .status-icon {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      animation: pulse-icon 2s infinite;
+    }
+
+    .success-icon {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+    }
+
+    .success-icon::before {
+      content: '✓';
+    }
+
+    .failure-icon {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
+    }
+
+    .failure-icon::before {
+      content: '✗';
+    }
+
+    @keyframes pulse-icon {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    h1 {
+      margin-bottom: 24px;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .success-title {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .failure-title {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    h2 {
+      color: #475569;
+      margin-top: 32px;
+      margin-bottom: 20px;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    p {
+      color: #64748b;
+      margin: 12px 0;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    strong {
+      color: #334155;
+      font-weight: 600;
+    }
+
+    .success-message {
+      color: #16a34a;
+      font-weight: 600;
+      margin-bottom: 32px;
+      font-size: 18px;
+      background: rgba(34, 197, 94, 0.08);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      border-radius: 12px;
+      padding: 16px 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    .failure-message {
+      color: #dc2626;
+      font-weight: 600;
+      margin-bottom: 32px;
+      font-size: 18px;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 12px;
+      padding: 16px 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    .receipt-details {
+      background: rgba(248, 250, 252, 0.8);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 24px;
+      text-align: left;
+      border: 1px solid rgba(226, 232, 240, 0.6);
+      backdrop-filter: blur(8px);
+    }
+
+    .receipt-details p {
+      margin: 12px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.4);
+    }
+
+    .receipt-details p:last-child {
+      border-bottom: none;
+    }
+
+    .receipt-details strong {
+      color: #475569;
+      min-width: 160px;
+      text-align: left;
+    }
+
+    .receipt-value {
+      color: #1e293b;
+      font-weight: 500;
+      text-align: right;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 32px;
+      padding: 16px 32px;
+      color: #fff;
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .success-button {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      box-shadow:
+        0 8px 24px rgba(34, 197, 94, 0.25),
+        0 4px 12px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .success-button:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 12px 32px rgba(34, 197, 94, 0.35),
+        0 6px 16px rgba(0, 0, 0, 0.15);
+      background: linear-gradient(135deg, #16a34a, #15803d);
+    }
+
+    .failure-button {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      box-shadow:
+        0 8px 24px rgba(239, 68, 68, 0.25),
+        0 4px 12px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .failure-button:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 12px 32px rgba(239, 68, 68, 0.35),
+        0 6px 16px rgba(0, 0, 0, 0.15);
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+    }
+
+    .button:active {
+      transform: translateY(0);
+    }
+
+    .button::after {
+      content: '→';
+      font-size: 18px;
+      margin-left: 4px;
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 12px;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+
+    .success-indicator {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.25);
+      color: #16a34a;
+    }
+
+    .failure-indicator {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: #dc2626;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: pulse-dot 2s infinite;
+    }
+
+    .success-dot {
+      background: #22c55e;
+    }
+
+    .failure-dot {
+      background: #ef4444;
+    }
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.6;
+        transform: scale(1.2);
+      }
+    }
+
+    .product-list {
+      background: rgba(248, 250, 252, 0.8);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 24px;
+      text-align: left;
+      border: 1px solid rgba(226, 232, 240, 0.6);
+    }
+
+    .product-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.4);
+    }
+
+    .product-item:last-child {
+      border-bottom: none;
+    }
+
+    .product-details {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .product-name {
+      color: #1e293b;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .product-quantity {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .product-price {
+      color: #16a34a;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 20px 10px;
+      }
+
+      .container {
+        padding: 32px 24px;
+        border-radius: 16px;
+      }
+
+      .status-icon {
+        width: 80px;
+        height: 80px;
+        font-size: 36px;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+
+      .receipt-details p {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+
+      .receipt-details strong {
+        min-width: auto;
+      }
+
+      .receipt-value {
+        text-align: left;
+      }
+
+      .button {
+        padding: 14px 28px;
+        font-size: 15px;
+      }
+
+      .product-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .status-icon,
+      .status-dot,
+      .button {
+        animation: none;
+        transition: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container <%= success ? 'success-container' : 'failure-container' %>">
+    <div class="<%= success ? 'success-glow' : 'failure-glow' %>"></div>
+
+    <div class="status-icon <%= success ? 'success-icon' : 'failure-icon' %>"></div>
+
+    <div class="status-indicator <%= success ? 'success-indicator' : 'failure-indicator' %>">
+      <div class="status-dot <%= success ? 'success-dot' : 'failure-dot' %>"></div>
+      <span><%= success ? 'Payment Successful' : 'Payment Failed' %></span>
+    </div>
+
+    <h1 class="<%= success ? 'success-title' : 'failure-title' %>">
+      <%= success ? 'Payment Completed' : 'Payment Failed' %>
+    </h1>
+
+    <p class="<%= success ? 'success-message' : 'failure-message' %>">
+      <%= message || (success ? 'Your payment has been processed successfully. Thank you for your purchase!' : 'Payment failed. Please try again.') %>
+    </p>
+
+    <% if (success && data) { %>
+    <h2>Receipt Details</h2>
+    <div class="receipt-details">
+      <p><strong>Transaction ID:</strong> <span class="receipt-value"><%= data.transactionId || 'N/A' %></span></p>
+      <p><strong>User ID:</strong> <span class="receipt-value"><%= data.userId || 'N/A' %></span></p>
+      <p><strong>Amount:</strong> <span class="receipt-value"><%= data.amount?.toLocaleString() || '0' %> <%= data.currency || 'VND' %></span></p>
+      <p><strong>Payment Method:</strong> <span class="receipt-value"><%= data.paymentMethod?.toUpperCase() || 'N/A' %></span></p>
+      <p><strong>Payment Gateway:</strong> <span class="receipt-value"><%= data.paymentGateway?.toUpperCase() || 'N/A' %></span></p>
+      <p><strong>Exchange Rate:</strong> <span class="receipt-value"><%= data.currentExchangeRate || '1.00' %></span></p>
+      <p><strong>Date & Time:</strong> <span class="receipt-value"><%= new Date().toLocaleString() %></span></p>
+    </div>
+
+    <% if (data.productList && data.productList.length > 0) { %>
+    <h2>Items Purchased</h2>
+    <div class="product-list">
+      <% data.productList.forEach((product, index) => { %>
+      <div class="product-item">
+        <div class="product-details">
+          <div class="product-name">Product #<%= product.productId %></div>
+          <div class="product-quantity">Quantity: <%= product.quantity %> items</div>
+        </div>
+        <div class="product-price"><%= product.currentPrice?.toLocaleString() || '0' %> <%= data.currency || 'VND' %> each</div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <a href="<%= frontendUrl || '/' %>" class="button success-button">Return to Home</a>
+
+    <% } else { %>
+    <a href="<%= frontendUrl || '/' %>" class="button failure-button">Go Back</a>
+    <% } %>
+  </div>
+</body>
+
+</html>

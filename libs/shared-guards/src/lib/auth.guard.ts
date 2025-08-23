@@ -66,7 +66,21 @@ export class AuthGuard implements CanActivate {
           return true;
         }),
         catchError((error) => {
-          Logger.error('Token verification failed:', error);
+          logger.error('Token verification failed:', error);
+
+          // Handle connection errors specifically
+          if (
+            error.message === 'Connection closed' ||
+            error.code === 'ECONNREFUSED'
+          ) {
+            throw new RpcException({
+              message:
+                'Authentication service is unavailable. Please try again later.',
+              code: 503,
+              location: 'AuthGuard',
+            });
+          }
+
           throw new RpcException({
             message: error.message || 'Invalid access token',
             code: 401,

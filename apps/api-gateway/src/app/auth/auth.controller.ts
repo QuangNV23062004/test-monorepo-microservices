@@ -27,8 +27,10 @@ export class AuthController {
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     try {
+      const redirectUrl = `${process.env.SERVER_URL}/api/auth/verify-email`;
+
       return await firstValueFrom(
-        this.authClient.send('auth.register', registerDto)
+        this.authClient.send('auth.register', { ...registerDto, redirectUrl })
       );
     } catch (error) {
       errorHandler(error, 'auth', 'Failed to register');
@@ -99,8 +101,10 @@ export class AuthController {
   async reverifyUser(@Body() reverifyDto: ReverifyDto) {
     try {
       const email = reverifyDto.email;
+
+      const redirectUrl = `${process.env.SERVER_URL}/api/auth/verify-email`;
       return await firstValueFrom(
-        this.authClient.send('auth.reverify', { email })
+        this.authClient.send('auth.reverify', { email, redirectUrl })
       );
     } catch (error) {
       errorHandler(error, 'auth', 'Failed to reverify user');

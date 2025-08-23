@@ -29,6 +29,7 @@ export class AppController {
       birthDate: Date;
       hobby: string;
       password: string;
+      redirectUrl: string;
     }
   ) {
     logger.log('Using pattern: auth.register ');
@@ -38,7 +39,8 @@ export class AppController {
         registerDto.name,
         registerDto.birthDate,
         registerDto.hobby,
-        registerDto.password
+        registerDto.password,
+        registerDto.redirectUrl
       );
     } catch (error) {
       this.handleError(error, 'Failed to register');
@@ -96,9 +98,9 @@ export class AppController {
   }
 
   @MessagePattern('auth.reverify')
-  async reverifyUser(@Payload() data: { email: string }) {
+  async reverifyUser(@Payload() data: { email: string; redirectUrl: string }) {
     try {
-      return await this.appService.reverifyEmail(data.email);
+      return await this.appService.reverifyEmail(data.email, data.redirectUrl);
     } catch (error) {
       this.handleError(error, 'Failed to reverify user');
     }

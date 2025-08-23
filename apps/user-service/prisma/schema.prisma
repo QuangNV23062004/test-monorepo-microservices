@@ -14,17 +14,105 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  name      String
-  role      String
-  birthDate DateTime?
-  hobby     String
-  password  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  isDeleted Boolean   @default(false)
-  isVerify  Boolean   @default(true)
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String
+  role          String
+  birthDate     DateTime?
+  hobby         String
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isDeleted     Boolean   @default(false)
+  isVerify      Boolean   @default(true)
+  refundBalance Decimal   @default(0)
+
+  receipts Receipt[] @relation("UserReceipts")
 
   @@map("users")
+}
+
+model Receipt {
+  id                  String        @id @default(uuid())
+  userId              String
+  amount              Decimal
+  currency            String
+  currentExchangeRate Decimal?
+  transactionId       String?
+  paymentMethod       String
+  paymentGateway      String
+  orderId             String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  isDeleted           Boolean       @default(false)
+  receiptItems        ReceiptItem[]
+  user                User          @relation("UserReceipts", fields: [userId], references: [id])
+  order               Order?        @relation(fields: [orderId], references: [id])
+
+  @@index([userId])
+  @@index([transactionId])
+  @@map("receipts")
+}
+
+model ReceiptItem {
+  id           String   @id @default(uuid())
+  receiptId    String
+  productId    String
+  quantity     Int
+  pricePerUnit Decimal
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  isDeleted    Boolean  @default(false)
+  receipt      Receipt  @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([receiptId])
+  @@map("receipt_items")
+}
+
+model Order {
+  id         String      @id @default(uuid())
+  userId     String
+  amount     Decimal
+  currency   String
+  receiptId  String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  isDeleted  Boolean     @default(false)
+  orderItems OrderItem[]
+  Receipt    Receipt[]
+
+  @@index([receiptId])
+  @@index([userId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+
+  Order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model Product {
+  id           String   @id @default(uuid())
+  name         String
+  images       String[] @default([])
+  quantity     Int
+  price        Decimal
+  currentPrice Decimal?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  isDeleted    Boolean  @default(false)
+
+  @@index([name])
+  @@map("products")
 }
