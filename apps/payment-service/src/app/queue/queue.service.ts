@@ -8,7 +8,7 @@ const PAYMENT_QUEUE_NAME = 'Payment_queue';
 @Injectable()
 export class QueueService {
   sendDataToQueue = async (data: object) => {
-    logger.debug('Sending queue data: ', data);
+    logger.debug('Sending data to queue');
     const { connection, channel } = await createConnection();
     try {
       await channel.assertQueue(PAYMENT_QUEUE_NAME, { durable: true });

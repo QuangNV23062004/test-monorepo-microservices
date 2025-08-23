@@ -25,15 +25,17 @@ export class AppService {
     return ejs.render(templateContent);
   };
 
-  handlePlaymentProcess = async (data: object) => {
+  handlePlaymentProcess = async (data: object, success: boolean) => {
     const templateContent = fs.readFileSync(redirectTemplatePath, 'utf8');
     try {
-      await this.queueService.sendDataToQueue(data);
+      if (success) await this.queueService.sendDataToQueue(data);
 
       return ejs.render(templateContent, {
-        success: true,
+        success: success,
         data: data,
-        message: '',
+        message: success
+          ? 'Payment successful'
+          : 'Payment failed, please check your account for refunded payment',
         frontendUrl: process.env.FRONTEND_URL,
       });
     } catch (error) {

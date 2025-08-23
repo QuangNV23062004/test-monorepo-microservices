@@ -8,6 +8,7 @@ import { User } from '@prisma/client';
 import { RpcException } from '@nestjs/microservices';
 import { RoleEnum } from '@nest-microservices/shared-guards';
 import * as bcrypt from 'bcrypt';
+import { PaymentModeEnum } from '@nest-microservices/shared-enum';
 
 @Injectable()
 export class AppService {
@@ -163,5 +164,42 @@ export class AppService {
 
     await this.userRepository.deleteById(id);
     return { message: 'User deleted successfully' };
+  };
+
+  updateUserBalance = async (id: string, amount: number, mode: string) => {
+    const user = await this.userRepository.getById(id);
+    if (!user) {
+      throw new RpcException({
+        code: HttpStatus.NOT_FOUND,
+        message: 'User not found',
+        location: 'UserService',
+      });
+    }
+
+    let newBalance;
+    switch (mode) {
+      case PaymentModeEnum.CHECKOUT:
+        if (Number(user.refundBalance) < amount) {
+          throw new RpcException({
+            code: HttpStatus.BAD_REQUEST,
+            message: 'Insufficient balance',
+            location: 'UserService',
+          });
+        }
+
+        newBalance = Number(user.refundBalance) - amount;
+        break;
+
+      case PaymentModeEnum.REFUND:
+        newBalance = Number(user.refundBalance) + amount;
+        break;
+
+      default:
+        break;
+    }
+
+    return await this.userRepository.updateById(id, {
+      refundBalance: newBalance,
+    });
   };
 }

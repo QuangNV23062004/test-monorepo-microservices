@@ -27,7 +27,7 @@ export class AppService {
   }
   getOrder = async (id: string, requesterId: string, role: string) => {
     const order = await this.orderRepository.getById(id, {
-      includes: {
+      include: {
         orderItems: true,
       },
     });
@@ -46,7 +46,7 @@ export class AppService {
       query.sortBy,
       {
         ...query.options,
-        includes: {
+        include: {
           orderItems: true,
           receipts: true,
         },
@@ -71,7 +71,17 @@ export class AppService {
     receiptId: string,
     orderItems: IProductItem[]
   ) => {
-    await this.prisma.$transaction(async (tx) => {
+    console.log('Creating order with data:', {
+      userId,
+      amount,
+      currency,
+      receiptId,
+      orderItems,
+    });
+
+    return await this.prisma.$transaction(async (tx) => {
+      console.log('Starting transaction...');
+
       const order = await this.orderRepository.create(
         { userId, amount, currency, receiptId },
         tx as any
@@ -87,19 +97,27 @@ export class AppService {
         orderItemsData,
         tx as any
       );
+      console.log('Order items created');
 
-      return this.orderRepository.getById(order.id, {
-        includes: {
-          orderItems: true,
+      const result = await this.orderRepository.getById(
+        order.id,
+        {
+          include: {
+            orderItems: true,
+          },
         },
-      });
+        tx as any
+      );
+      console.log('Final result:', result);
+      return result;
     });
   };
 
   deleteOrder = async (id: string) => {
-    await this.prisma.$transaction(async (tx) => {
+    return await this.prisma.$transaction(async (tx) => {
       await this.orderItemRepository.deleteOrderItems(id, tx as any);
       await this.orderRepository.deleteById(id, tx as any);
+      return true;
     });
   };
 }

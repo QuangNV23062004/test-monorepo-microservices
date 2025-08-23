@@ -16,8 +16,8 @@ export const MicroserviceClients: ClientsModuleOptions = [
   getClient(
     MICROSERVICE_CLIENTS.AUTH_SERVICE,
     Transport.TCP,
-    'localhost',
-    3001
+    process.env.AUTH_SERVICE_HOST || 'localhost',
+    Number(process.env.AUTH_SERVICE_PORT) || 3001
   ),
   getClient(
     MICROSERVICE_CLIENTS.USER_SERVICE,

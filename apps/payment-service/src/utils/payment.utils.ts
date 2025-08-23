@@ -43,7 +43,7 @@ const createMomoPayment = async (
     userId,
     products: productList,
   };
-  const extraData = encodeURIComponent(JSON.stringify(extraDataObj));
+  const extraData = JSON.stringify(extraDataObj);
   // const paymentCode = momoConfig.paymentCode;
   const orderGroupId = '';
   const autoCapture = true;
@@ -94,16 +94,12 @@ const createMomoPayment = async (
     signature: signature,
   });
   try {
-    const response = await axios.post(
-      momoConfig.paymentUrl,
-      JSON.parse(requestBody),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(requestBody),
-        },
-      }
-    );
+    const response = await axios.post(momoConfig.paymentUrl, requestBody, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(requestBody),
+      },
+    });
 
     return response.data.shortLink;
   } catch (error) {
@@ -143,7 +139,7 @@ const createVnpayPayment = async (
     vnp_ReturnUrl: redirect,
     vnp_IpAddr: ipAddr as string,
     vnp_CreateDate: createDate,
-    vnp_IpnUrl: ipn,
+    // vnp_IpnUrl: ipn,
   };
 
   if (bankCode) {
@@ -169,10 +165,9 @@ const createPaypalPayment = async (
   productList: IProductItem[],
   returnUrl: string,
   cancelUrl: string,
-  notifyUrl: string
+  notifyUrl: string,
+  exchangeRate: number
 ) => {
-  const productListString = JSON.stringify(productList);
-
   const createPaymentJson = {
     intent: 'sale',
     payer: {
@@ -181,7 +176,6 @@ const createPaypalPayment = async (
     redirect_urls: {
       return_url: returnUrl,
       cancel_url: cancelUrl,
-      notify_url: notifyUrl,
     },
     transactions: [
       {
@@ -189,13 +183,30 @@ const createPaypalPayment = async (
           currency: 'USD',
           total: amount.toFixed(2),
         },
-        description: `${userId}|${productListString}`,
+        description: `${userId} order`,
+        custom: JSON.stringify({ userId, products: productList, exchangeRate }),
+        notify_url: notifyUrl,
       },
     ],
   };
 
-  return new Promise((resolve, reject) => {
+  const paymentData: any = await new Promise((resolve, reject) => {
     paypal.payment.create(createPaymentJson, (error, payment) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(payment);
+      }
+    });
+  });
+
+  const paymentLinks: any[] = paymentData?.links;
+  return paymentLinks.find((link) => link.rel === 'approval_url').href;
+};
+
+const getPaypalPaymentInfo = async (paymentId: string) => {
+  return new Promise((resolve, reject) => {
+    paypal.payment.get(paymentId, (error, payment) => {
       if (error) {
         reject(error);
       } else {
@@ -205,4 +216,9 @@ const createPaypalPayment = async (
   });
 };
 
-export { createMomoPayment, createVnpayPayment, createPaypalPayment };
+export {
+  createMomoPayment,
+  createVnpayPayment,
+  createPaypalPayment,
+  getPaypalPaymentInfo,
+};

@@ -9,10 +9,6 @@ import {
 } from 'class-validator';
 
 export class UpdateProductDto {
-  @ApiProperty({ description: 'Product ID' })
-  @IsString()
-  id: string;
-
   @ApiProperty({ description: 'Product name', example: 'Product123' })
   @IsString()
   @IsOptional()

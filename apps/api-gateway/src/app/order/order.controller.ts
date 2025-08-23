@@ -28,7 +28,7 @@ export class OrderController {
   @Roles(RoleEnum.ADMIN, RoleEnum.USER)
   @Get('user/:id')
   async getOrderByUserId(
-    @Param() id: string,
+    @Param('id') id: string,
     @Query('page') page: number,
     @Query('size') size: number,
     @Query('search') search: string,
@@ -61,7 +61,7 @@ export class OrderController {
 
   @Roles(RoleEnum.ADMIN, RoleEnum.USER)
   @Get(':id')
-  async getOrder(@Param() id: string, @Req() req: IAuthenticatedRequest) {
+  async getOrder(@Param('id') id: string, @Req() req: IAuthenticatedRequest) {
     const requesterId = req?.user?.userId;
     const role = req?.user?.role;
 

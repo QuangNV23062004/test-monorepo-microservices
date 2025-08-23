@@ -9,6 +9,7 @@ import { ClientConfigsMap } from '../../utils/client-register';
       ClientConfigsMap['AUTH_SERVICE'],
       ClientConfigsMap['PAYMENT_SERVICE'],
       ClientConfigsMap['PRODUCT_SERVICE'],
+      ClientConfigsMap['USER_SERVICE'],
     ]),
   ],
   controllers: [PaymentController],

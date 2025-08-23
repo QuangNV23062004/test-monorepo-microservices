@@ -75,7 +75,7 @@ export class AppController {
     }
   }
 
-  @MessagePattern('D')
+  @MessagePattern('product.update')
   async updateProduct(
     @Payload()
     data: {

@@ -35,10 +35,10 @@ export class AppController {
   }
 
   @MessagePattern('payment.redirect')
-  paymentRedirect(@Payload() data: object) {
+  paymentRedirect(@Payload() data: { data: object; success: boolean }) {
     logger.log('Using pattern: payment.redirect');
     try {
-      return this.appService.handlePlaymentProcess(data);
+      return this.appService.handlePlaymentProcess(data.data, data.success);
     } catch (error) {
       this.handleError(error, 'Failed to redirect payment');
     }

@@ -143,7 +143,7 @@ export class AppService {
         tx as any
       );
 
-      console.log('receipt created');
+      // console.log('receipt created');
       // Prepare receipt items data
       const receiptItems = receiptItemList.map((r) => ({
         receiptId: receipt.id,
@@ -153,7 +153,7 @@ export class AppService {
         isDeleted: false,
       }));
 
-      console.log('receipt-item created');
+      // console.log('receipt-item created');
       // Create receipt items within the transaction
       await this.receiptItemRepository.createReceiptItems(
         receiptItems,

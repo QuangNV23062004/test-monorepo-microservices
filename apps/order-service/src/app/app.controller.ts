@@ -91,15 +91,24 @@ export class AppController {
     }
   ) {
     logger.log('Using pattern: order.create');
+    logger.log('Order data received:', JSON.stringify(data, null, 2));
+
     try {
-      return await this.appService.createOrder(
+      const result = await this.appService.createOrder(
         data.userId,
         data.amount,
         data.currency || 'VND',
         data.receiptId,
         data.orderItem
       );
+
+      logger.log(
+        'Order created successfully:',
+        JSON.stringify(result, null, 2)
+      );
+      return result;
     } catch (error) {
+      logger.error('Error creating order:', error);
       this.handleError(error, 'Failed to create order');
     }
   }

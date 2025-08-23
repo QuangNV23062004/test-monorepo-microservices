@@ -83,7 +83,7 @@ export class ReceiptController {
     description: 'Additional filter options',
   })
   async getReceiptByUserId(
-    @Param() id: string,
+    @Param('id') id: string,
     @Query('page') page: number,
     @Query('size') size: number,
     @Query('search') search: string,
@@ -179,7 +179,7 @@ export class ReceiptController {
 
   @Roles(RoleEnum.ADMIN, RoleEnum.USER)
   @Get(':id')
-  async getReceipt(@Param() id: string, @Req() req: IAuthenticatedRequest) {
+  async getReceipt(@Param('id') id: string, @Req() req: IAuthenticatedRequest) {
     return await firstValueFrom(
       this.receiptClient.send('receipt.get-by-id', {
         id,

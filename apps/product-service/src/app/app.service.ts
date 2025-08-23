@@ -7,7 +7,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { ProductRepository } from './repository/product.repository';
 import { Product } from '@prisma/client';
 import { RpcException } from '@nestjs/microservices';
-
+import { PaymentModeEnum } from '@nest-microservices/shared-enum';
 @Injectable()
 export class AppService {
   constructor(private readonly productRepository: ProductRepository) {}
@@ -75,6 +75,8 @@ export class AppService {
         });
       }
     }
+
+    return products;
   };
 
   updateProduct = async (
@@ -92,7 +94,7 @@ export class AppService {
     if (price) data = { ...data, price };
     if (currentPrice) data = { ...data, currentPrice };
 
-    await this.productRepository.updateById(id, data);
+    return await this.productRepository.updateById(id, data);
   };
 
   updateProductsQuantity = async (
@@ -113,7 +115,7 @@ export class AppService {
 
     const newProductList = productList.map((p) => {
       const product = products.find((product) => product.id === p.productId);
-      if (mode.toLocaleLowerCase() === 'checkout') {
+      if (mode.toLocaleLowerCase() === PaymentModeEnum.CHECKOUT) {
         if (p.quantity > product.quantity) {
           throw new RpcException({
             code: HttpStatus.BAD_REQUEST,
@@ -122,15 +124,15 @@ export class AppService {
           });
         }
         p.quantity = product.quantity - p.quantity;
-      } else if (mode.toLocaleLowerCase() === 'refund') {
+      } else if (mode.toLocaleLowerCase() === PaymentModeEnum.REFUND) {
         p.quantity = product.quantity + p.quantity;
       }
       return p;
     });
-    await this.productRepository.updateProductLists(newProductList);
+    return await this.productRepository.updateProductLists(newProductList);
   };
 
   deleteProduct = async (id: string) => {
-    return this.productRepository.deleteById(id);
+    return await this.productRepository.deleteById(id);
   };
 }

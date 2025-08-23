@@ -1,16 +1,27 @@
-import { Injectable, OnModuleInit, Logger, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  Logger,
+  Inject,
+  HttpStatus,
+} from '@nestjs/common';
 import { QueueService } from './queue/queue.service';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom, timeout, catchError, of } from 'rxjs';
+import { firstValueFrom, timeout, catchError } from 'rxjs';
+import { Receipt } from '@prisma/client';
+import { PaymentModeEnum } from '@nest-microservices/shared-enum';
+import { IProductItem } from '@nest-microservices/shared-interfaces';
 
 @Injectable()
 export class AppService implements OnModuleInit {
-  private readonly logger = new Logger(AppService.name);
+  private readonly logger = new Logger('PaymentWorker');
 
   constructor(
     private readonly queueService: QueueService,
     @Inject('RECEIPT_SERVICE') private readonly receiptClient: ClientProxy,
-    @Inject('USER_SERVICE') private readonly userClient: ClientProxy
+    @Inject('USER_SERVICE') private readonly userClient: ClientProxy,
+    @Inject('ORDER_SERVICE') private readonly orderClient: ClientProxy,
+    @Inject('PRODUCT_SERVICE') private readonly productClient: ClientProxy
   ) {}
 
   async getData() {
@@ -37,46 +48,86 @@ export class AppService implements OnModuleInit {
 
     let receipt = null;
     let order = null;
+    let product = null;
     try {
       // Step 1: Create receipt
-      receipt = await this.createReceipt(data);
-      // this.logger.log(`Receipt created: ${receipt}`);
+      receipt = await this.createReceipt(
+        data.userId,
+        data.transactionId,
+        data.amount,
+        data.currency,
+        data.paymentMethod,
+        data.paymentGateway,
+        data.productList
+      );
+      this.logger.debug(`Receipt created: ${receipt.id}`);
 
       //Step 2: Create order
-      order = 1;
+      order = await this.createOrder(
+        data.userId,
+        data.amount,
+        data.currency,
+        data.productList,
+        receipt.id
+      );
+      this.logger.debug(`Order created: ${order.id}`);
+
+      //Step 3: Update product quantity
+      product = await this.updateProductQuantity(
+        data.productList,
+        PaymentModeEnum.CHECKOUT
+      );
+      this.logger.debug(`Products updated: ${product}`);
 
       this.logger.log(`Payment processing completed: ${data.transactionId}`);
     } catch (error) {
-      if (receipt) {
-        await firstValueFrom(
-          this.receiptClient.send('receipt.delete', { receiptId: receipt.id })
-        );
-      }
+      if (receipt) this.deleteReceipt(receipt.id);
 
-      if (order) {
-        //Delete order
-      }
+      if (order) this.deleteOrder(order.id);
+
+      if (product)
+        this.updateProductQuantity(data.productList, PaymentModeEnum.REFUND);
+
       this.logger.error(
         `Payment processing failed: ${data.transactionId}`,
         error
       );
-
+      // Calculate refund amount in VND (convert from USD to VND) if needed
+      const refundAmount =
+        Math.round(data.amount * data.currentExchangeRate * 100) / 100;
       // Initiate refund
-      await this.initiateRefund(data, error);
+      await this.refundUser(data.userId, refundAmount);
 
       throw error; // Re-throw so queue service can handle it
     }
   }
 
-  private async createReceipt(data: any): Promise<any> {
+  private async updateProductQuantity(
+    productList: IProductItem[],
+    mode: string
+  ) {
+    return await firstValueFrom(
+      this.productClient.send('product.update-quantity', { productList, mode })
+    );
+  }
+
+  private async createReceipt(
+    userId: string,
+    transactionId: string,
+    amount: number,
+    currency: string,
+    paymentMethod: string,
+    paymentGateway: string,
+    productList: IProductItem[]
+  ): Promise<Receipt> {
     const receiptData = {
-      userId: data.userId,
-      transactionId: data.transactionId,
-      amount: data.amount,
-      currency: data.currency,
-      paymentMethod: data.paymentMethod,
-      paymentGateway: data.paymentGateway,
-      productList: data.productList,
+      userId: userId,
+      transactionId: transactionId,
+      amount: amount,
+      currency: currency,
+      paymentMethod: paymentMethod,
+      paymentGateway: paymentGateway,
+      productList: productList,
       status: 'completed',
       createdAt: new Date(),
     };
@@ -91,74 +142,66 @@ export class AppService implements OnModuleInit {
     );
   }
 
-  private async updateUserAccount(data: any, receipt: any): Promise<void> {
-    const updateData = {
-      userId: data.userId,
-      transactionId: data.transactionId,
-      productList: data.productList,
-      receiptId: receipt.id,
-      amount: data.amount,
-    };
-
-    this.logger.debug('Update user account?: ', updateData);
-    // await firstValueFrom(
-    //   this.userClient.send('user.processPayment', updateData).pipe(
-    //     timeout(10000),
-    //     catchError((error) => {
-    //       throw new Error(`User update failed: ${error.message}`);
-    //     })
-    //   )
-    // );
-  }
-
-  private async markReceiptAsFailed(
-    receiptId: string,
-    error: any
-  ): Promise<void> {
+  private async refundUser(id: string, amount: number) {
     try {
-      // await firstValueFrom(
-      //   this.receiptClient
-      //     .send('receipt.markAsFailed', {
-      //       receiptId,
-      //       error: error instanceof Error ? error.message : String(error),
-      //       failedAt: new Date(),
-      //     })
-      //     .pipe(
-      //       timeout(5000),
-      //       catchError(() => of(null))
-      //     )
-      // );
-
-      this.logger.debug('Mark receipt as failed?: ', receiptId, error);
-    } catch (err) {
-      this.logger.warn('Could not mark receipt as failed:', err);
+      await firstValueFrom(
+        this.userClient.send('user.update-balance', {
+          id,
+          amount,
+          mode: PaymentModeEnum.REFUND,
+        })
+      );
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
   }
 
-  private async initiateRefund(data: any, processingError: any): Promise<void> {
+  private async deleteReceipt(receiptId: string): Promise<void> {
     try {
-      const refundData = {
-        userId: data.userId,
-        transactionId: data.transactionId,
-        amount: data.amount,
-        currency: data.currency,
-        reason: 'processing_failed',
-        error:
-          processingError instanceof Error
-            ? processingError.message
-            : String(processingError),
-      };
+      await firstValueFrom(
+        this.receiptClient.send('receipt.delete', {
+          receiptId,
+        })
+      );
 
-      // await firstValueFrom(
-      //   this.userClient.send('user.initiateRefund', refundData).pipe(
-      //     timeout(10000),
-      //     catchError(() => of(null))
-      //   )
-      // );
+      this.logger.debug('Deleted receipt:', receiptId);
+    } catch (err) {
+      this.logger.warn('Could not delete receipt: ', err);
+    }
+  }
 
-      this.logger.log(`Refund initiated for: ${data.transactionId}`);
-    } catch (error) {
-      this.logger.error('Failed to initiate refund:', error);
+  private async createOrder(
+    userId: string,
+    amount: number,
+    currency: string,
+    orderItem: IProductItem[],
+    receiptId: string
+  ) {
+    const orderData = {
+      userId: userId,
+      amount: amount.toString(), // Convert to string
+      currency: currency,
+      receiptId,
+      orderItem: orderItem,
+    };
+
+    return await firstValueFrom(
+      this.orderClient.send('order.create', orderData).pipe(
+        timeout(10000),
+        catchError((error) => {
+          throw new Error(`Order creation failed: ${error.message}`);
+        })
+      )
+    );
+  }
+
+  private async deleteOrder(orderId: string) {
+    try {
+      await firstValueFrom(this.orderClient.send('order.delete', { orderId }));
+      this.logger.debug('Deleted order:', orderId);
+    } catch (err) {
+      this.logger.warn('Could not delete order: ', err);
     }
   }
 

@@ -110,4 +110,20 @@ export class AppController {
       this.handleError(error, 'Failed to delete user');
     }
   }
+
+  @MessagePattern('user.update-balance')
+  async updateBalance(
+    @Payload() data: { id: string; amount: number; mode: string }
+  ) {
+    logger.log('Using pattern: user.update-balance');
+    try {
+      return await this.appService.updateUserBalance(
+        data.id,
+        data.amount,
+        data.mode
+      );
+    } catch (error) {
+      this.handleError(error, 'Failed to update user balance');
+    }
+  }
 }

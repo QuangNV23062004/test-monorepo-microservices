@@ -1,5 +1,7 @@
+import { Logger } from '@nestjs/common';
 import { Transport } from '@nestjs/microservices';
 
+const logger = new Logger();
 export const getClient = (
   name: string,
   transport: number,

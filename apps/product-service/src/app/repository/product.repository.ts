@@ -36,5 +36,9 @@ export class ProductRepository extends BaseRepository<Product> {
   `;
 
     await this.prisma.$executeRawUnsafe(query);
+
+    // Return the updated products
+    const productIds = productLists.map((p) => p.productId);
+    return await this.getProductLists(productIds);
   }
 }

@@ -99,7 +99,7 @@ export class ProductController {
   }
 
   @Get(':id')
-  async getProductById(@Param() id: string) {
+  async getProductById(@Param('id') id: string) {
     return await firstValueFrom(
       this.productClient.send('product.get-by-id', { id })
     );
@@ -117,16 +117,22 @@ export class ProductController {
   @Roles(RoleEnum.ADMIN)
   @UseGuards(AuthGuard, RoleGuard)
   @Patch(':id')
-  async updateProduct(@Body() updateProductDto: UpdateProductDto) {
+  async updateProduct(
+    @Param('id') id: string,
+    @Body() updateProductDto: UpdateProductDto
+  ) {
     return await firstValueFrom(
-      this.productClient.send('product.update', { ...updateProductDto })
+      this.productClient.send('product.update', {
+        id,
+        ...updateProductDto,
+      })
     );
   }
 
   @Roles(RoleEnum.ADMIN)
   @UseGuards(AuthGuard, RoleGuard)
   @Delete(':id')
-  async deleteProduct(@Param() id: string) {
+  async deleteProduct(@Param('id') id: string) {
     return await firstValueFrom(
       this.productClient.send('product.delete', { id })
     );

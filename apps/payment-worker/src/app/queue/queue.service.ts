@@ -42,9 +42,9 @@ export class QueueService {
                   data.transactionId
                 }`
               );
-              logger.debug('Full queue data:', {
-                ...data,
-              });
+              // logger.debug('Full queue data:', {
+              //   ...data,
+              // });
 
               await callback(data);
               channel.ack(msg);
