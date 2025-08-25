@@ -1,11 +1,16 @@
 import { Controller, Get, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
+import { QueueService } from './queue/queue.service';
 
 const logger = new Logger('PaymentService');
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private readonly queueService: QueueService
+  ) {}
+
   private handleError(error: unknown, message: string) {
     logger.error(error);
     if (error instanceof RpcException) {
@@ -35,12 +40,23 @@ export class AppController {
   }
 
   @MessagePattern('payment.redirect')
-  paymentRedirect(@Payload() data: { data: object; success: boolean }) {
+  async paymentRedirect(@Payload() data: { data: object; success: boolean }) {
     logger.log('Using pattern: payment.redirect');
     try {
-      return this.appService.handlePlaymentProcess(data.data, data.success);
+      return await this.appService.paymentRedirect(data.data, data.success);
     } catch (error) {
       this.handleError(error, 'Failed to redirect payment');
+    }
+  }
+
+  @MessagePattern('payment.send-data-to-queue')
+  async sendDataToQueue(data: object) {
+    logger.log('Using pattern: payment.send-data-to-queue');
+    try {
+      await this.queueService.sendDataToQueue(data);
+      return true;
+    } catch (error) {
+      this.handleError(error, 'Failed to send data to queue');
     }
   }
 }

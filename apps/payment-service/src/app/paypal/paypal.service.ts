@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   createPaypalPayment,
+  executePaypalPayment,
   getPaypalPaymentInfo,
 } from '../../utils/payment.utils';
 import { IProductItem } from '@nest-microservices/shared-interfaces';
@@ -91,5 +92,52 @@ export class PaypalService {
     } catch (error) {
       throw new Error(`Failed to get payment info: ${error.message}`);
     }
+  };
+
+  async executePaypalPayment(paymentId: string, payerId: string) {
+    try {
+      const payment = await executePaypalPayment(paymentId, payerId);
+      return payment;
+    } catch (error) {
+      throw new Error(`Failed to execute payment: ${error.message}`);
+    }
+  }
+
+  async extractPaypalIPNData(data: any) {
+    try {
+      const custom = JSON.parse(data.custom);
+      const userId = custom.userId;
+      const productList = custom.products;
+      const amount = Number(data.mc_gross);
+      const currency = data.mc_currency;
+      const transactionId = data.txn_id;
+      const paymentMethod = 'paypal';
+      const currentExchangeRate = Number(custom.exchangeRate);
+
+      const result = {
+        userId,
+        amount,
+        currency,
+        currentExchangeRate,
+        transactionId,
+        paymentMethod,
+        paymentGateway: 'PayPal',
+        productList,
+      };
+
+      return result;
+    } catch (error) {
+      throw new Error(`Failed to handle paypal ipn data: ${error.message}`);
+    }
+  }
+
+  verifyIpn = async (data: object) => {
+    const params = new URLSearchParams({ cmd: '_notify-validate', ...data });
+    const response = await axios.post(
+      process.env.PAYPAL_IPN_VERIFICATION_URL,
+      params
+    );
+
+    return response.data;
   };
 }

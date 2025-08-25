@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
-import { PaymentController } from './payment.controller';
 import { ClientsModule } from '@nestjs/microservices';
 import { ClientConfigsMap } from '../../utils/client-register';
+import { MomoController } from './momo-payment.controller';
+import { PaypalController } from './paypal-payment.controller';
+import { PaymentHelper } from './utils/payment-helper.utils';
 
 @Module({
   imports: [
@@ -12,6 +14,7 @@ import { ClientConfigsMap } from '../../utils/client-register';
       ClientConfigsMap['USER_SERVICE'],
     ]),
   ],
-  controllers: [PaymentController],
+  controllers: [MomoController, PaypalController],
+  providers: [PaymentHelper],
 })
 export class PaymentModule {}
