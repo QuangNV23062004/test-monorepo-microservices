@@ -88,4 +88,22 @@ export class MomoController {
       this.handleError(error, 'Failed to extract momo payment');
     }
   }
+
+  @MessagePattern('payment.momo.extract-ipn-body')
+  async extractIpnBody(data: any) {
+    logger.log('Using pattern: payment.momo.extract-ipn-body');
+    return await this.momoService.extractIpnBody(data);
+  }
+
+  @MessagePattern('payment.momo.verify-ipn')
+  async verifyMomoSignature(
+    @Payload() data: { data: any; redirect: string; ipn: string }
+  ) {
+    logger.log('Using patter: payment.momo.verify-ipn');
+    return await this.momoService.verifyMomoSignature(
+      data.data,
+      data.redirect,
+      data.ipn
+    );
+  }
 }

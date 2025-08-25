@@ -121,12 +121,12 @@ export class AppService implements OnModuleInit {
     productList: IProductItem[]
   ): Promise<Receipt> {
     const receiptData = {
-      userId: userId,
-      transactionId: transactionId,
-      amount: amount,
-      currency: currency,
-      paymentMethod: paymentMethod,
-      paymentGateway: paymentGateway,
+      userId: userId.toString(),
+      transactionId: transactionId.toString(),
+      amount: Number(amount),
+      currency: currency.toString(),
+      paymentMethod: paymentMethod.toString(),
+      paymentGateway: paymentGateway.toString(),
       productList: productList,
       status: 'completed',
       createdAt: new Date(),

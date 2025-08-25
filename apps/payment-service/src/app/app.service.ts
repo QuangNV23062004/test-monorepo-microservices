@@ -3,6 +3,7 @@ import path from 'path';
 import ejs from 'ejs';
 import fs from 'fs';
 import { QueueService } from './queue/queue.service';
+import axios from 'axios';
 
 const ipnTemplatePath = path.resolve(
   __dirname,
@@ -15,7 +16,6 @@ const redirectTemplatePath = path.resolve(
 
 @Injectable()
 export class AppService {
-  constructor(private readonly queueService: QueueService) {}
   getData(): { message: string } {
     return { message: 'Hello API' };
   }
@@ -25,11 +25,9 @@ export class AppService {
     return ejs.render(templateContent);
   };
 
-  handlePlaymentProcess = async (data: object, success: boolean) => {
+  paymentRedirect = async (data: object, success: boolean) => {
     const templateContent = fs.readFileSync(redirectTemplatePath, 'utf8');
     try {
-      if (success) await this.queueService.sendDataToQueue(data);
-
       return ejs.render(templateContent, {
         success: success,
         data: data,

@@ -22,6 +22,9 @@ const sortObject = (obj: Record<string, unknown>) => {
   return sortedObj;
 };
 
+/*
+ * Create momo payment
+ */
 const createMomoPayment = async (
   amount: number,
   userId: string,
@@ -115,6 +118,53 @@ const createMomoPayment = async (
   }
 };
 
+/*
+ * Verify Momo Ipn signature
+ */
+const verifyMomoIpnSignature = (
+  data: any,
+  redirect: string,
+  ipn: string
+): boolean => {
+  const rawSignature =
+    'accessKey=' +
+    momoConfig.accessKey +
+    '&amount=' +
+    data.amount +
+    '&extraData=' +
+    data.extraData +
+    '&message=' +
+    data.message +
+    '&orderId=' +
+    data.orderId +
+    '&orderInfo=' +
+    data.orderInfo +
+    '&orderType=' +
+    data.orderType +
+    '&partnerCode=' +
+    data.partnerCode +
+    '&payType=' +
+    data.payType +
+    '&requestId=' +
+    data.requestId +
+    '&responseTime=' +
+    data.responseTime +
+    '&resultCode=' +
+    data.resultCode +
+    '&transId=' +
+    data.transId;
+
+  const expectedSignature = crypto
+    .createHmac('sha256', momoConfig.secretKey)
+    .update(rawSignature)
+    .digest('hex');
+
+  return expectedSignature === data.signature;
+};
+
+/*
+ * Create vnpay payment
+ */
 const createVnpayPayment = async (
   amount: number,
   userId: string,
@@ -159,6 +209,9 @@ const createVnpayPayment = async (
   return vnpUrl;
 };
 
+/*
+ * Create paypal payment
+ */
 const createPaypalPayment = async (
   amount: number,
   userId: string,
@@ -204,9 +257,28 @@ const createPaypalPayment = async (
   return paymentLinks.find((link) => link.rel === 'approval_url').href;
 };
 
+/*
+ * Get paypal payment by paymentId
+ */
 const getPaypalPaymentInfo = async (paymentId: string) => {
   return new Promise((resolve, reject) => {
     paypal.payment.get(paymentId, (error, payment) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(payment);
+      }
+    });
+  });
+};
+
+/*
+ * Execute paypal payment
+ */
+const executePaypalPayment = async (paymentId: string, payerId: string) => {
+  return new Promise((resolve, reject) => {
+    const executeJson = { payer_id: payerId };
+    paypal.payment.execute(paymentId, executeJson, (error, payment) => {
       if (error) {
         reject(error);
       } else {
@@ -221,4 +293,6 @@ export {
   createVnpayPayment,
   createPaypalPayment,
   getPaypalPaymentInfo,
+  executePaypalPayment,
+  verifyMomoIpnSignature,
 };
