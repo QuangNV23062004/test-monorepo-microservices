@@ -506,7 +506,7 @@
           <div class="product-name">Product #<%= product.productId %></div>
           <div class="product-quantity">Quantity: <%= product.quantity %> items</div>
         </div>
-        <div class="product-price"><%= product.currentPrice?.toLocaleString() || '0' %> <%= data.currency || 'VND' %> each</div>
+        <div class="product-price"><%= product.currentPrice?.toLocaleString() || '0' %> <%= 'VND' %> each</div>
       </div>
       <% }) %>
     </div>
