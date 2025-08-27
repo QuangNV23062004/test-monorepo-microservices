@@ -22,6 +22,15 @@ const sortObject = (obj: Record<string, unknown>) => {
   return sortedObj;
 };
 
+const decodeObject = (obj: Record<string, unknown>) => {
+  const sortedKeys = Object.keys(obj).sort();
+  const sortedObj: Record<string, string> = {};
+  sortedKeys.forEach((key) => {
+    sortedObj[key] = decodeURIComponent(String(obj[key])).replace(/%20/g, '+');
+  });
+  return sortedObj;
+};
+
 /*
  * Create momo payment
  */
@@ -174,7 +183,7 @@ const createVnpayPayment = async (
   ipAddr?: string,
   bankCode?: string
 ): Promise<string> => {
-  const productListString = JSON.stringify(productList);
+  const data = { userId, productList };
   const createDate = moment(new Date()).format('YYYYMMDDHHmmss');
   let vnp_Params: IVNPayParams = {
     vnp_Version: '2.1.0',
@@ -183,13 +192,13 @@ const createVnpayPayment = async (
     vnp_Locale: 'vn',
     vnp_CurrCode: 'VND',
     vnp_TxnRef: uuidv4(),
-    vnp_OrderInfo: `${userId}|${productListString}`,
-    vnp_OrderType: 'Membership package',
-    vnp_Amount: String(amount * 100),
+    vnp_OrderInfo: JSON.stringify(data),
+    vnp_OrderType: 'Product List',
+    vnp_Amount: (amount * 100).toString(),
     vnp_ReturnUrl: redirect,
     vnp_IpAddr: ipAddr as string,
     vnp_CreateDate: createDate,
-    // vnp_IpnUrl: ipn,
+    // vnp_IpnUrl: ipn,       //can't override ipn, must set in page https://sandbox.vnpayment.vn/merchantv2/Home/Dashboard.htm
   };
 
   if (bankCode) {
@@ -207,6 +216,29 @@ const createVnpayPayment = async (
     encode: false,
   })}`;
   return vnpUrl;
+};
+
+/*
+ * Decode the vnpay's query object
+ */
+const decodeVnpayQuery = (data: any) => {
+  return decodeObject(data);
+};
+
+/*
+ * Verify vnpay's secureHash
+ */
+const verifyVNPaySecureHash = (data: any): boolean => {
+  const { vnp_SecureHash, vnp_SecureHashType, ...rest } = data;
+
+  const sortedParams = sortObject(rest);
+
+  const signData = querystring.stringify(sortedParams, { encode: false });
+
+  const hmac = crypto.createHmac('sha512', vnpayConfig.vnp_HashSecret);
+  const verifyHash = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
+
+  return verifyHash === vnp_SecureHash;
 };
 
 /*
@@ -238,7 +270,7 @@ const createPaypalPayment = async (
         },
         description: `${userId} order`,
         custom: JSON.stringify({ userId, products: productList, exchangeRate }),
-        notify_url: notifyUrl,
+        notify_url: notifyUrl, //not sure if overridable, set and enable in here first: https://sandbox.paypal.com/mep/dashboard
       },
     ],
   };
@@ -290,9 +322,11 @@ const executePaypalPayment = async (paymentId: string, payerId: string) => {
 
 export {
   createMomoPayment,
+  verifyMomoIpnSignature,
   createVnpayPayment,
+  decodeVnpayQuery,
+  verifyVNPaySecureHash,
   createPaypalPayment,
   getPaypalPaymentInfo,
   executePaypalPayment,
-  verifyMomoIpnSignature,
 };
