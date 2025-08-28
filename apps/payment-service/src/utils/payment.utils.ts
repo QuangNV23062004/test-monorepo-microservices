@@ -12,8 +12,8 @@ import { momoConfig } from '../configs/momo.config';
 import { Logger } from '@nestjs/common';
 import { IProductItem } from '@nest-microservices/shared-interfaces';
 
-const logger = new Logger('PaymentUtils');
-const sortObject = (obj: Record<string, unknown>) => {
+const logger = new Logger('PaymentService - PaymentUtils');
+const sortObject = (obj: Record<string, unknown>): Record<string, string> => {
   const sortedKeys = Object.keys(obj).sort();
   const sortedObj: Record<string, string> = {};
   sortedKeys.forEach((key) => {
@@ -22,7 +22,7 @@ const sortObject = (obj: Record<string, unknown>) => {
   return sortedObj;
 };
 
-const decodeObject = (obj: Record<string, unknown>) => {
+const decodeObject = (obj: Record<string, unknown>): Record<string, string> => {
   const sortedKeys = Object.keys(obj).sort();
   const sortedObj: Record<string, string> = {};
   sortedKeys.forEach((key) => {
@@ -221,7 +221,7 @@ const createVnpayPayment = async (
 /*
  * Decode the vnpay's query object
  */
-const decodeVnpayQuery = (data: any) => {
+const decodeVnpayQuery = (data: any): Record<string, string> => {
   return decodeObject(data);
 };
 
@@ -252,7 +252,7 @@ const createPaypalPayment = async (
   cancelUrl: string,
   notifyUrl: string,
   exchangeRate: number
-) => {
+): Promise<string> => {
   const createPaymentJson = {
     intent: 'sale',
     payer: {
@@ -292,7 +292,7 @@ const createPaypalPayment = async (
 /*
  * Get paypal payment by paymentId
  */
-const getPaypalPaymentInfo = async (paymentId: string) => {
+const getPaypalPaymentInfo = async (paymentId: string): Promise<object> => {
   return new Promise((resolve, reject) => {
     paypal.payment.get(paymentId, (error, payment) => {
       if (error) {
@@ -307,7 +307,10 @@ const getPaypalPaymentInfo = async (paymentId: string) => {
 /*
  * Execute paypal payment
  */
-const executePaypalPayment = async (paymentId: string, payerId: string) => {
+const executePaypalPayment = async (
+  paymentId: string,
+  payerId: string
+): Promise<object> => {
   return new Promise((resolve, reject) => {
     const executeJson = { payer_id: payerId };
     paypal.payment.execute(paymentId, executeJson, (error, payment) => {

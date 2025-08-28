@@ -20,12 +20,12 @@ export class AppService {
     return { message: 'Hello API' };
   }
 
-  getIpnTemplate = () => {
+  getIpnTemplate = (): string => {
     const templateContent = fs.readFileSync(ipnTemplatePath, 'utf8');
     return ejs.render(templateContent);
   };
 
-  paymentRedirect = async (data: object, success: boolean) => {
+  paymentRedirect = async (data: object, success: boolean): Promise<string> => {
     const templateContent = fs.readFileSync(redirectTemplatePath, 'utf8');
     try {
       return ejs.render(templateContent, {

@@ -8,13 +8,14 @@ import {
 import { MomoService } from './momo.service';
 import { IProductItem } from '@nest-microservices/shared-interfaces';
 import { IMomoQuery } from '../../types/IMomoQuery';
+import { QueueData } from '../../types/IQueueData';
 
 const logger = new Logger('PaymentService - Momo');
 @Controller('momo')
 export class MomoController {
   constructor(private readonly momoService: MomoService) {}
 
-  private handleError(error: unknown, message: string) {
+  private handleError(error: unknown, message: string): RpcException {
     logger.error(error);
     if (error instanceof RpcException) {
       throw error;
@@ -26,6 +27,7 @@ export class MomoController {
       });
     }
   }
+
   @MessagePattern('payment.momo.create')
   async createMomoPayment(
     @Payload()
@@ -35,7 +37,7 @@ export class MomoController {
       redirect: string;
       ipn: string;
     }
-  ) {
+  ): Promise<string> {
     logger.log('Using pattern: payment.momo.create');
 
     try {
@@ -51,7 +53,7 @@ export class MomoController {
   }
 
   @MessagePattern('payment.momo.extract')
-  async extractMomoData(data: IMomoQuery) {
+  async extractMomoData(data: IMomoQuery): Promise<QueueData> {
     logger.log('Using pattern: payment.momo.extract');
     try {
       const { amount, transId, payType, extraData } = data;
@@ -77,12 +79,7 @@ export class MomoController {
 
         return queueData;
       } catch (error) {
-        console.error('Error processing MoMo return:', error);
-        return {
-          message: 'Error processing payment return',
-          error: error.message,
-          extraData: extraData,
-        };
+        this.handleError(error, 'Error processing MoMo return');
       }
     } catch (error) {
       this.handleError(error, 'Failed to extract momo payment');
@@ -90,20 +87,28 @@ export class MomoController {
   }
 
   @MessagePattern('payment.momo.extract-ipn-body')
-  async extractIpnBody(data: any) {
+  async extractIpnBody(data: any): Promise<object> {
     logger.log('Using pattern: payment.momo.extract-ipn-body');
-    return await this.momoService.extractIpnBody(data);
+    try {
+      return await this.momoService.extractIpnBody(data);
+    } catch (error) {
+      this.handleError(error, 'Failed to extract data from ipn body');
+    }
   }
 
   @MessagePattern('payment.momo.verify-ipn')
   async verifyMomoSignature(
     @Payload() data: { data: any; redirect: string; ipn: string }
-  ) {
+  ): Promise<boolean> {
     logger.log('Using patter: payment.momo.verify-ipn');
-    return await this.momoService.verifyMomoSignature(
-      data.data,
-      data.redirect,
-      data.ipn
-    );
+    try {
+      return await this.momoService.verifyMomoSignature(
+        data.data,
+        data.redirect,
+        data.ipn
+      );
+    } catch (error) {
+      this.handleError(error, 'Failed to verify ipn');
+    }
   }
 }

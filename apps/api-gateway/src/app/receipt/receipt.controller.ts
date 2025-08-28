@@ -20,12 +20,14 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import { ApiQuery } from '@nestjs/swagger';
 import { firstValueFrom } from 'rxjs';
+import { MICROSERVICE_CLIENTS } from '../../utils/client-register.utils';
 
 @Controller('receipt')
 @UseGuards(AuthGuard, RoleGuard)
 export class ReceiptController {
   constructor(
-    @Inject('RECEIPT_SERVICE') private readonly receiptClient: ClientProxy
+    @Inject(MICROSERVICE_CLIENTS.RECEIPT_SERVICE)
+    private readonly receiptClient: ClientProxy
   ) {}
 
   @Roles(RoleEnum.ADMIN)
@@ -181,7 +183,7 @@ export class ReceiptController {
   @Get(':id')
   async getReceipt(@Param('id') id: string, @Req() req: IAuthenticatedRequest) {
     return await firstValueFrom(
-      this.receiptClient.send('receipt.get-by-id', {
+      this.receiptClient.send('receipt.get-receipt', {
         id,
         requesterId: req?.user?.userId,
         role: req?.user?.role,

@@ -5,6 +5,7 @@ import {
   verifyVNPaySecureHash,
 } from '../../utils/payment.utils';
 import { IProductItem } from '@nest-microservices/shared-interfaces';
+import { QueueData } from '../../types/IQueueData';
 
 @Injectable()
 export class VnpayService {
@@ -14,7 +15,7 @@ export class VnpayService {
     redirect: string,
     ipn: string,
     ipAddr: string
-  ) => {
+  ): Promise<string> => {
     let total = 0;
 
     productList.map((p) => {
@@ -31,7 +32,7 @@ export class VnpayService {
     );
   };
 
-  extractVnpayQuery = async (data: any) => {
+  extractVnpayQuery = async (data: any): Promise<QueueData> => {
     const decodedData = decodeVnpayQuery(data);
     const orderInfo: any = JSON.parse(decodedData.vnp_OrderInfo);
     const queueData = {
@@ -47,7 +48,7 @@ export class VnpayService {
     return queueData;
   };
 
-  verifyVnpaySecureHash = async (data) => {
+  verifyVnpaySecureHash = async (data): Promise<boolean> => {
     return await verifyVNPaySecureHash(data);
   };
 }

@@ -1,0 +1,7 @@
+#DATABASE
+DATABASE_URL=postgres://user:password@host:port/dbname
+
+#SERVER
+PORT=3006
+HOST='0.0.0.0'
+TRANSPORT=0

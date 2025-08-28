@@ -19,14 +19,16 @@ import { UpdateUserDto } from './dtos/update-user.dto';
 import { AuthGuard, RoleEnum } from '@nest-microservices/shared-guards';
 import { RoleGuard } from '@nest-microservices/shared-guards';
 import { Roles } from '@nest-microservices/shared-decorators';
-import { errorHandler } from '../../utils/error-handler';
+import { errorHandler } from '../../utils/error-handler.utils';
 import { ApiQuery } from '@nestjs/swagger';
+import { MICROSERVICE_CLIENTS } from '../../utils/client-register.utils';
 
 @Controller('users')
 @UseGuards(AuthGuard, RoleGuard)
 export class UserController {
   constructor(
-    @Inject('USER_SERVICE') private readonly userClient: ClientProxy
+    @Inject(MICROSERVICE_CLIENTS.USER_SERVICE)
+    private readonly userClient: ClientProxy
   ) {}
 
   @Get('all')

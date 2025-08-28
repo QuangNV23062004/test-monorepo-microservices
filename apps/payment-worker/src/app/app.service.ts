@@ -8,9 +8,10 @@ import {
 import { QueueService } from './queue/queue.service';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom, timeout, catchError } from 'rxjs';
-import { Receipt } from '@prisma/client';
+import { Order, Receipt } from '@prisma/client';
 import { PaymentModeEnum } from '@nest-microservices/shared-enum';
 import { IProductItem } from '@nest-microservices/shared-interfaces';
+import { MICROSERVICE_CLIENTS } from '../utils/client-register.utils';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -18,27 +19,31 @@ export class AppService implements OnModuleInit {
 
   constructor(
     private readonly queueService: QueueService,
-    @Inject('RECEIPT_SERVICE') private readonly receiptClient: ClientProxy,
-    @Inject('USER_SERVICE') private readonly userClient: ClientProxy,
-    @Inject('ORDER_SERVICE') private readonly orderClient: ClientProxy,
-    @Inject('PRODUCT_SERVICE') private readonly productClient: ClientProxy
+    @Inject(MICROSERVICE_CLIENTS.RECEIPT_SERVICE)
+    private readonly receiptClient: ClientProxy,
+    @Inject(MICROSERVICE_CLIENTS.USER_SERVICE)
+    private readonly userClient: ClientProxy,
+    @Inject(MICROSERVICE_CLIENTS.ORDER_SERVICE)
+    private readonly orderClient: ClientProxy,
+    @Inject(MICROSERVICE_CLIENTS.PRODUCT_SERVICE)
+    private readonly productClient: ClientProxy
   ) {}
 
   async getData() {
     return { data: 'data' };
   }
 
-  async onModuleInit() {
+  async onModuleInit(): Promise<void> {
     this.logger.log('Starting payment worker...');
     // Start listening to the queue
     this.startQueueListener();
   }
 
-  private startQueueListener() {
+  private async startQueueListener(): Promise<void> {
     this.logger.log('🔍 Initializing queue listener...');
-    this.queueService.consumePaymentData((data) => {
+    this.queueService.consumePaymentData(async (data) => {
       this.logger.log(`📥 Received work item: ${data.transactionId}`);
-      return this.processPayment(data);
+      return await this.processPayment(data);
     });
   }
 
@@ -105,7 +110,7 @@ export class AppService implements OnModuleInit {
   private async updateProductQuantity(
     productList: IProductItem[],
     mode: string
-  ) {
+  ): Promise<object> {
     return await firstValueFrom(
       this.productClient.send('product.update-quantity', { productList, mode })
     );
@@ -142,7 +147,7 @@ export class AppService implements OnModuleInit {
     );
   }
 
-  private async refundUser(id: string, amount: number) {
+  private async refundUser(id: string, amount: number): Promise<void> {
     try {
       await firstValueFrom(
         this.userClient.send('user.update-balance', {
@@ -177,7 +182,7 @@ export class AppService implements OnModuleInit {
     currency: string,
     orderItem: IProductItem[],
     receiptId: string
-  ) {
+  ): Promise<Order> {
     const orderData = {
       userId: userId,
       amount: amount.toString(), // Convert to string
@@ -196,7 +201,7 @@ export class AppService implements OnModuleInit {
     );
   }
 
-  private async deleteOrder(orderId: string) {
+  private async deleteOrder(orderId: string): Promise<void> {
     try {
       await firstValueFrom(this.orderClient.send('order.delete', { orderId }));
       this.logger.debug('Deleted order:', orderId);

@@ -1,10 +1,15 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ReceiptRepository } from './repository/receipt.repository';
-import { IProductItem, IQuery } from '@nest-microservices/shared-interfaces';
+import {
+  IPaginatedResponse,
+  IProductItem,
+  IQuery,
+} from '@nest-microservices/shared-interfaces';
 import { ReceiptItemRepository } from './repository/receipt-item.repository';
 import { PrismaService } from './prisma/prisma.service';
 import { RpcException } from '@nestjs/microservices';
 import { RoleEnum } from '@nest-microservices/shared-enum';
+import { Receipt } from '@prisma/client';
 @Injectable()
 export class AppService {
   constructor(
@@ -26,7 +31,7 @@ export class AppService {
     }
   };
 
-  getReceipts = async () => {
+  getReceipts = async (): Promise<Receipt[]> => {
     return await this.receiptRepository.getAll({
       include: {
         receiptItems: {
@@ -55,12 +60,14 @@ export class AppService {
     query: IQuery,
     requesterId: string,
     role: string
-  ) => {
+  ): Promise<IPaginatedResponse> => {
     this.checkUser(userId, requesterId, role);
     return await this.receiptRepository.getReceiptsByUserId(userId, query);
   };
 
-  getAllReceiptWithPagination = async (query: IQuery) => {
+  getAllReceiptWithPagination = async (
+    query: IQuery
+  ): Promise<IPaginatedResponse> => {
     return await this.receiptRepository.getAllWithPagination(
       query.page,
       query.size,
@@ -92,7 +99,11 @@ export class AppService {
     );
   };
 
-  getReceipt = async (id: string, requesterId: string, role: string) => {
+  getReceipt = async (
+    id: string,
+    requesterId: string,
+    role: string
+  ): Promise<Receipt> => {
     const receipt = await this.receiptRepository.getById(id, {
       include: {
         receiptItems: {
@@ -127,7 +138,7 @@ export class AppService {
     paymentMethod: string,
     paymentGateway: string,
     receiptItemList: IProductItem[]
-  ) => {
+  ): Promise<Receipt> => {
     return this.prisma.$transaction(async (tx) => {
       // Create the receipt
       const receipt = await this.receiptRepository.create(
@@ -191,7 +202,7 @@ export class AppService {
     });
   };
 
-  deleteReceipt = async (receiptId: string) => {
+  deleteReceipt = async (receiptId: string): Promise<boolean> => {
     return this.prisma.$transaction(async (tx) => {
       await this.receiptRepository.deleteById(receiptId);
       await this.receiptItemRepository.deleteReceiptItems(receiptId);

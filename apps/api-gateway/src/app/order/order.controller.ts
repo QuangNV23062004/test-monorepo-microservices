@@ -17,16 +17,64 @@ import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { RoleEnum } from '@nest-microservices/shared-enum';
 import { ApiQuery } from '@nestjs/swagger';
+import { MICROSERVICE_CLIENTS } from '../../utils/client-register.utils';
 
 @Controller('order')
 @UseGuards(AuthGuard, RoleGuard)
 export class OrderController {
   constructor(
-    @Inject('ORDER_SERVICE') private readonly orderClient: ClientProxy
+    @Inject(MICROSERVICE_CLIENTS.ORDER_SERVICE)
+    private readonly orderClient: ClientProxy
   ) {}
 
   @Roles(RoleEnum.ADMIN, RoleEnum.USER)
   @Get('user/:id')
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (starts from 1)',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    description: 'Items per page',
+    example: 10,
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search term',
+  })
+  @ApiQuery({
+    name: 'searchField',
+    required: false,
+    type: String,
+    description: 'Field to search in',
+  })
+  @ApiQuery({
+    name: 'order',
+    required: false,
+    type: String,
+    description: 'Sort order (asc/desc)',
+    example: 'asc',
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    type: String,
+    description: 'Field to sort by',
+    example: 'createdAt',
+  })
+  @ApiQuery({
+    name: 'options',
+    required: false,
+    type: 'object',
+    description: 'Additional filter options',
+  })
   async getOrderByUserId(
     @Param('id') id: string,
     @Query('page') page: number,

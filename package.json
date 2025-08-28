@@ -14,6 +14,7 @@
     "@nestjs/platform-express": "^11.0.0",
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/terminus": "^11.0.0",
+    "@payos/node": "^2.0.1",
     "@paypal/checkout-server-sdk": "^1.0.3",
     "@paypal/paypal-server-sdk": "^1.1.0",
     "@prisma/client": "^6.13.0",

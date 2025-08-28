@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { Response } from 'express';
-import { errorHandler } from '../utils/error-handler';
+import { errorHandler } from './error-handler.utils';
 
 @Catch(RpcException) // Only catch RpcExceptions (mainly from guards)
 export class GlobalExceptionFilter implements ExceptionFilter {

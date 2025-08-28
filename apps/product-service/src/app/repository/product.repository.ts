@@ -2,7 +2,7 @@ import {
   BaseRepository,
   IPrismaService,
 } from '@nest-microservices/shared-repository';
-import { Product } from '@prisma/client';
+import { Prisma, Product } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 import { IProductItem } from '@nest-microservices/shared-interfaces';
@@ -13,7 +13,10 @@ export class ProductRepository extends BaseRepository<Product> {
     super(prisma, 'product');
   }
 
-  async getProductLists(ids: string[], tx?: IPrismaService) {
+  async getProductLists(
+    ids: string[],
+    tx?: IPrismaService
+  ): Promise<Product[]> {
     const model = this.getModel(tx);
     return await model.findMany({
       where: {
@@ -23,7 +26,7 @@ export class ProductRepository extends BaseRepository<Product> {
     });
   }
 
-  async updateProductLists(productLists: IProductItem[]) {
+  async updateProductLists(productLists: IProductItem[]): Promise<Product[]> {
     const values = productLists
       .map((p) => `('${p.productId}', ${p.quantity})`)
       .join(',');

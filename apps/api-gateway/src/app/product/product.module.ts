@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ProductController } from './product.controller';
-import { ClientConfigsMap } from '../../utils/client-register';
+import {
+  ClientConfigsMap,
+  MICROSERVICE_CLIENTS,
+} from '../../utils/client-register.utils';
 import { ClientsModule } from '@nestjs/microservices';
 
 @Module({
   imports: [
     ClientsModule.register([
-      ClientConfigsMap['AUTH_SERVICE'],
-      ClientConfigsMap['PRODUCT_SERVICE'],
+      ClientConfigsMap[MICROSERVICE_CLIENTS.AUTH_SERVICE],
+      ClientConfigsMap[MICROSERVICE_CLIENTS.PRODUCT_SERVICE],
     ]),
   ],
   controllers: [ProductController],

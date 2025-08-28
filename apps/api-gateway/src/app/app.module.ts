@@ -8,7 +8,7 @@ import { UserController } from './user/user.controller';
 import { UserModule } from './user/user.module';
 import { AuthController } from './auth/auth.controller';
 import { LoggerMiddleware } from '../middleware/logger.middleware';
-import { MicroserviceClients } from '../utils/client-register';
+import { MicroserviceClients } from '../utils/client-register.utils';
 import { PaymentModule } from './payment/payment.module';
 import { ReceiptController } from './receipt/receipt.controller';
 import { OrderController } from './order/order.controller';

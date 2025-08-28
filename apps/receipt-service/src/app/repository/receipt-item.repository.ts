@@ -15,12 +15,15 @@ export class ReceiptItemRepository extends BaseRepository<ReceiptItem> {
   async createReceiptItems(
     data: Prisma.ReceiptItemCreateManyInput[],
     tx?: IPrismaService
-  ) {
+  ): Promise<ReceiptItem[]> {
     const model = this.getModel(tx);
     return await model.createMany({ data });
   }
 
-  async deleteReceiptItems(receiptId: string, tx?: IPrismaService) {
+  async deleteReceiptItems(
+    receiptId: string,
+    tx?: IPrismaService
+  ): Promise<boolean> {
     const model = this.getModel(tx);
     await model.updateMany({
       where: { receiptId: receiptId, isDeleted: false },

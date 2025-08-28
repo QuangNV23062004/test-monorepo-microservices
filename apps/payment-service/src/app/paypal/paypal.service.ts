@@ -6,6 +6,7 @@ import {
 } from '../../utils/payment.utils';
 import { IProductItem } from '@nest-microservices/shared-interfaces';
 import axios from 'axios';
+import { QueueData } from '../../types/IQueueData';
 
 @Injectable()
 export class PaypalService {
@@ -15,7 +16,7 @@ export class PaypalService {
     returnUrl: string,
     cancelUrl: string,
     notifyUrl: string
-  ) => {
+  ): Promise<string> => {
     let total = 0;
 
     productList.map((p) => {
@@ -43,7 +44,7 @@ export class PaypalService {
     return url;
   };
 
-  getPaymentInfo = async (paymentId: string) => {
+  getPaymentInfo = async (paymentId: string): Promise<object> => {
     try {
       // Fetch payment info from PayPal API
       const info: any = await getPaypalPaymentInfo(paymentId);
@@ -94,7 +95,10 @@ export class PaypalService {
     }
   };
 
-  async executePaypalPayment(paymentId: string, payerId: string) {
+  async executePaypalPayment(
+    paymentId: string,
+    payerId: string
+  ): Promise<object> {
     try {
       const payment = await executePaypalPayment(paymentId, payerId);
       return payment;
@@ -103,7 +107,7 @@ export class PaypalService {
     }
   }
 
-  async extractPaypalIPNData(data: any) {
+  async extractPaypalIPNData(data: any): Promise<QueueData> {
     try {
       const custom = JSON.parse(data.custom);
       const userId = custom.userId;
@@ -131,7 +135,7 @@ export class PaypalService {
     }
   }
 
-  verifyIpn = async (data: object) => {
+  verifyIpn = async (data: object): Promise<string> => {
     const params = new URLSearchParams({ cmd: '_notify-validate', ...data });
     const response = await axios.post(
       process.env.PAYPAL_IPN_VERIFICATION_URL,

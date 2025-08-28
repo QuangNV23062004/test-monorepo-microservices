@@ -38,7 +38,7 @@ export class AppService {
     quantity: number,
     price: number,
     currentPrice: number
-  ) => {
+  ): Promise<Product> => {
     return await this.productRepository.create({
       name,
       images,
@@ -48,7 +48,9 @@ export class AppService {
     });
   };
 
-  checkProductList = async (productList: IProductItem[]) => {
+  checkProductList = async (
+    productList: IProductItem[]
+  ): Promise<Product[]> => {
     const aggregated = productList.reduce((acc, item) => {
       acc[item.productId] = (acc[item.productId] || 0) + item.quantity;
       return acc;
@@ -86,7 +88,7 @@ export class AppService {
     quantity?: number,
     price?: number,
     currentPrice?: number
-  ) => {
+  ): Promise<Product> => {
     let data = {};
     if (name) data = { ...data, name };
     if (images) data = { ...data, images };
@@ -100,7 +102,7 @@ export class AppService {
   updateProductsQuantity = async (
     productList: IProductItem[],
     mode: string
-  ) => {
+  ): Promise<Product[]> => {
     const ids = productList.map((p) => {
       return p.productId;
     });
@@ -132,7 +134,7 @@ export class AppService {
     return await this.productRepository.updateProductLists(newProductList);
   };
 
-  deleteProduct = async (id: string) => {
+  deleteProduct = async (id: string): Promise<boolean> => {
     return await this.productRepository.deleteById(id);
   };
 }

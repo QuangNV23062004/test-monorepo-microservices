@@ -79,6 +79,7 @@ export default abstract class BaseRepository<T> {
       take: size,
       skip: skip,
       where: whereClause,
+      include: options?.['include'],
     };
 
     // Add sorting

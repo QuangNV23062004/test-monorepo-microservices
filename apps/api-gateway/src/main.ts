@@ -7,7 +7,7 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { GlobalExceptionFilter } from './utils/global-exception-handler';
+import { GlobalExceptionFilter } from './utils/global-exception-handler.utils';
 import * as express from 'express';
 
 async function bootstrap() {
@@ -33,7 +33,7 @@ async function bootstrap() {
     exposedHeaders: ['set-cookie'],
   });
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.SERVER_PORT || 3000;
   const logger = new Logger('ApiGateway');
 
   try {
