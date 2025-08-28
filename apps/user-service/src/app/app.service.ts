@@ -150,7 +150,7 @@ export class AppService {
     return updatedUser;
   };
 
-  deleteUser = async (id: string, requesterId: string) => {
+  deleteUser = async (id: string, requesterId: string): Promise<boolean> => {
     await this.checkRequester(id, requesterId);
 
     const user = await this.userRepository.getById(id);
@@ -163,10 +163,14 @@ export class AppService {
     }
 
     await this.userRepository.deleteById(id);
-    return { message: 'User deleted successfully' };
+    return true;
   };
 
-  updateUserBalance = async (id: string, amount: number, mode: string) => {
+  updateUserBalance = async (
+    id: string,
+    amount: number,
+    mode: string
+  ): Promise<User> => {
     const user = await this.userRepository.getById(id);
     if (!user) {
       throw new RpcException({

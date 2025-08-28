@@ -8,11 +8,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { Transport } from '@nestjs/microservices';
 async function bootstrap() {
+  const transport = Number(process.env.TRANSPORT) || Transport.TCP;
+  const host = process.env.HOST || '0.0.0.0';
+  const port = Number(process.env.PORT) || 3002;
   const app = await NestFactory.createMicroservice(AppModule, {
-    transport: Transport.TCP,
+    transport: transport,
     options: {
-      host: '0.0.0.0',
-      port: 3002,
+      host: host,
+      port: port,
     },
   });
 
