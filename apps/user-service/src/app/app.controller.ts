@@ -1,14 +1,18 @@
-import { Controller, Get, Logger } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { IQuery } from '@nest-microservices/shared-interfaces';
+import {
+  IPaginatedResponse,
+  IQuery,
+} from '@nest-microservices/shared-interfaces';
+import { User } from '@prisma/client';
 
 const logger = new Logger('UserService');
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  private handleError(error: unknown, message: string) {
+  private handleError(error: unknown, message: string): RpcException {
     logger.error(error);
     if (error instanceof RpcException) {
       throw error;
@@ -22,7 +26,7 @@ export class AppController {
   }
 
   @MessagePattern('user.find-users')
-  async findAll() {
+  async findAll(): Promise<User[]> {
     logger.log('Using pattern: user.find-users');
     try {
       return this.appService.findUsers();
@@ -32,7 +36,9 @@ export class AppController {
   }
 
   @MessagePattern('user.find-user')
-  async findById(@Payload() payload: any) {
+  async findById(
+    @Payload() payload: { id: string; requesterId: string }
+  ): Promise<User> {
     logger.log('Using pattern: user.find-user');
     try {
       const { id, requesterId } = payload;
@@ -44,23 +50,27 @@ export class AppController {
 
   @MessagePattern('user.find-users-with-pagination')
   async findUsersWithPagination(
-    @Payload() page?: number,
-    size?: number,
-    search?: string,
-    searchField?: string,
-    order?: string,
-    sortBy?: string,
-    options?: Record<string, any>
-  ) {
+    @Payload() payload?: Partial<IQuery>
+  ): Promise<IPaginatedResponse> {
     logger.log('Using pattern: user.find-users-with-pagination');
     try {
+      const {
+        page = 1,
+        size = 5,
+        search = '',
+        searchField = 'name',
+        order = 'asc',
+        sortBy = 'createdAt',
+        options = {},
+      } = payload || {};
+
       return this.appService.findUsersWithPagination({
-        page: page || 1,
-        size: size || 5,
-        search: search || '',
-        searchField: searchField || '',
-        order: (order as 'asc' | 'desc') || 'asc',
-        sortBy: sortBy || 'createdAt',
+        page: Number(page) || 1,
+        size: Number(size) || 5,
+        search: String(search ?? ''),
+        searchField: String(searchField ?? 'name'),
+        order: (order as 'asc' | 'desc') ?? 'asc',
+        sortBy: String(sortBy ?? 'createdAt'),
         options: options || {},
       } as IQuery);
     } catch (error) {
@@ -69,7 +79,20 @@ export class AppController {
   }
 
   @MessagePattern('user.update')
-  async update(@Payload() payload: any) {
+  async update(
+    @Payload()
+    payload: {
+      id: string;
+      requesterId: string;
+      name?: string;
+      birthDate?: string;
+      hobby?: string;
+      email?: string;
+      password?: string;
+      oldPassword?: string;
+      role?: string;
+    }
+  ): Promise<User> {
     logger.log('Using pattern: user.update');
     try {
       const {
@@ -101,7 +124,9 @@ export class AppController {
   }
 
   @MessagePattern('user.delete')
-  async delete(@Payload() payload: any) {
+  async delete(
+    @Payload() payload: { id: string; requesterId: string }
+  ): Promise<boolean> {
     logger.log('Using pattern: user.delete');
     try {
       const { id, requesterId } = payload;
@@ -114,7 +139,7 @@ export class AppController {
   @MessagePattern('user.update-balance')
   async updateBalance(
     @Payload() data: { id: string; amount: number; mode: string }
-  ) {
+  ): Promise<User> {
     logger.log('Using pattern: user.update-balance');
     try {
       return await this.appService.updateUserBalance(
