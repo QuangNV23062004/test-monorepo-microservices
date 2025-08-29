@@ -14,12 +14,15 @@ export default class OrderItemRepository extends BaseRepository<OrderItem> {
   async createOrderItems(
     data: Prisma.OrderItemCreateManyInput[],
     tx?: IPrismaService
-  ) {
+  ): Promise<Prisma.BatchPayload> {
     const model = this.getModel(tx);
     return await model.createMany({ data });
   }
 
-  async deleteOrderItems(orderId: string, tx?: IPrismaService) {
+  async deleteOrderItems(
+    orderId: string,
+    tx?: IPrismaService
+  ): Promise<Prisma.BatchPayload> {
     const model = this.getModel(tx);
     return model.updateMany({
       where: {

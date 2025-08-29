@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Processing Issue - Refund Processed - <%= companyName %></title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .header .subtitle {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .failure-explanation {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .failure-explanation h3 {
+      color: #856404;
+      margin-bottom: 10px;
+    }
+
+    .refund-details {
+      background: #d4edda;
+      border-left: 4px solid #28a745;
+      border-radius: 0 8px 8px 0;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .refund-details h3 {
+      color: #155724;
+      margin-bottom: 15px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #c3e6cb;
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .detail-label {
+      font-weight: bold;
+      color: #155724;
+    }
+
+    .detail-value {
+      color: #155724;
+    }
+
+    .amount {
+      font-size: 18px;
+      font-weight: bold;
+      color: #28a745;
+    }
+
+    .transaction-details {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .transaction-details h4 {
+      margin-bottom: 15px;
+      color: #495057;
+    }
+
+    .next-steps {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .next-steps h3 {
+      color: #0d47a1;
+      margin-bottom: 10px;
+    }
+
+    .next-steps ul {
+      margin-left: 20px;
+      color: #1565c0;
+    }
+
+    .next-steps li {
+      margin-bottom: 8px;
+    }
+
+    .product-list {
+      margin: 15px 0;
+    }
+
+    .product-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border-left: 3px solid #dc3545;
+    }
+
+    .product-item.unavailable {
+      background: #f8d7da;
+      border-left-color: #dc3545;
+    }
+
+    .product-info {
+      flex: 1;
+    }
+
+    .product-name {
+      font-weight: bold;
+      color: #495057;
+    }
+
+    .product-details {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 2px;
+    }
+
+    .product-price {
+      font-weight: bold;
+      color: #495057;
+    }
+
+    .unavailable-badge {
+      background: #dc3545;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      margin-left: 10px;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background: #007bff;
+      color: white;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      margin: 10px 5px;
+      text-align: center;
+    }
+
+    .cta-button:hover {
+      background: #0056b3;
+    }
+
+    .cta-button.secondary {
+      background: #6c757d;
+    }
+
+    .cta-button.secondary:hover {
+      background: #545b62;
+    }
+
+    .footer {
+      background: #f8f9fa;
+      padding: 20px 30px;
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .contact-info {
+      margin-top: 15px;
+    }
+
+    .contact-info a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 10px;
+      }
+
+      .header,
+      .content,
+      .footer {
+        padding: 20px;
+      }
+
+      .detail-row {
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .product-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .cta-button {
+        display: block;
+        margin: 10px 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Payment Processing Issue</h1>
+      <div class="subtitle">Automatic refund processed to your account</div>
+    </div>
+
+    <div class="content">
+      <p>Dear <%= customer.name || 'Valued Customer' %>,</p>
+
+      <div class="failure-explanation">
+        <h3>What Happened?</h3>
+        <p>We successfully received your payment, but unfortunately encountered an issue while processing your order. This was likely due to insufficient inventory or a technical processing error.</p>
+        <p>To ensure you're not charged for an unfulfilled order, we've automatically processed a full refund to your account.</p>
+      </div>
+
+      <div class="transaction-details">
+        <h4>Transaction Details</h4>
+        <div class="detail-row">
+          <span class="detail-label">Transaction ID:</span>
+          <span class="detail-value"><%= queueData.transactionId %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Payment Method:</span>
+          <span class="detail-value"><%= queueData.paymentMethod %> via <%= queueData.paymentGateway %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Processing Date:</span>
+          <span class="detail-value"><%= new Date().toLocaleDateString() %> at <%= new Date().toLocaleTimeString() %></span>
+        </div>
+
+      </div>
+
+      <div class="refund-details">
+        <h3>✅ Refund Processed</h3>
+        <div class="detail-row">
+          <span class="detail-label">Refund Amount:</span>
+          <span class="detail-value amount"><%= queueData.currency %> <%= queueData.amount.toFixed(2) %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Exchange Rate Used:</span>
+          <span class="detail-value"><%= queueData.currentExchangeRate %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Credited to:</span>
+          <span class="detail-value">Your <%= companyName %> Account Balance</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Status:</span>
+          <span class="detail-value">✅ Available for immediate use</span>
+        </div>
+      </div>
+
+      <% if (queueData.productList && queueData.productList.length > 0) { %>
+      <h4>Items That Couldn't Be Processed:</h4>
+      <div class="product-list">
+        <% queueData.productList.forEach(item => { %>
+        <div class="product-item unavailable">
+          <div class="product-info">
+            <div class="product-name">Product ID: <%= item.productId %></div>
+            <div class="product-details">
+              Requested Qty: <%= item.quantity %> |
+              Price at time: <%= queueData.currency %><%= Number(item.currentPrice).toFixed(2) %>
+            </div>
+          </div>
+          <div>
+            <div class="product-price"><%= queueData.currency %><%= (Number(item.currentPrice) * Number(item.quantity)).toFixed(2) %></div>
+            <span class="unavailable-badge">UNAVAILABLE</span>
+          </div>
+        </div>
+        <% }); %>
+      </div>
+      <% } %>
+
+      <div class="next-steps">
+        <h3>What You Can Do Now:</h3>
+        <ul>
+          <li><strong>Use your account credit:</strong> The refunded amount is immediately available in your account</li>
+          <li><strong>Check product availability:</strong> Items may become available again soon</li>
+          <li><strong>Set up notifications:</strong> Get alerted when out-of-stock items are restocked</li>
+          <li><strong>Request cash refund:</strong> Contact support if you prefer a refund to your original payment method</li>
+        </ul>
+      </div>
+
+      <div style="text-align: center;">
+        <% if (links && links.shop) { %>
+        <a href="<%= links.shop %>" class="cta-button">Continue Shopping</a>
+        <% } %>
+        <% if (links && links.accountBalance) { %>
+        <a href="<%= links.accountBalance %>" class="cta-button">View Account Balance</a>
+        <% } %>
+        <% if (links && links.support) { %>
+        <a href="<%= links.support %>" class="cta-button secondary">Contact Support</a>
+        <% } %>
+      </div>
+
+      <p style="margin-top: 25px; font-style: italic; color: #6c757d;">
+        <strong>Reference:</strong> <%= queueData.transactionId %>
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>We apologize for this inconvenience and appreciate your understanding.</p>
+      <div class="contact-info">
+        <p><strong>Need immediate assistance?</strong></p>
+        <p>Email: <a href="mailto:<%= companyInfo.email %>"><%= companyInfo.email %></a></p>
+        <p>Phone: <%= companyInfo.phone %></p>
+        <p>Live Support: <%= companyInfo.supportHours %></p>
+        <p style="margin-top: 10px; font-size: 12px;">Reference Transaction: <%= queueData.transactionId %></p>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

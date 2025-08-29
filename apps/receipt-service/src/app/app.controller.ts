@@ -1,7 +1,12 @@
 import { Controller, Get, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { IProductItem, IQuery } from '@nest-microservices/shared-interfaces';
+import {
+  IPaginatedResponse,
+  IProductItem,
+  IQuery,
+} from '@nest-microservices/shared-interfaces';
+import { Receipt } from '@prisma/client';
 
 const logger = new Logger('ReceiptService');
 
@@ -9,7 +14,7 @@ const logger = new Logger('ReceiptService');
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  private handleError(error: unknown, message: string) {
+  private handleError(error: unknown, message: string): RpcException {
     logger.error(error);
     if (error instanceof RpcException) {
       throw error;
@@ -28,7 +33,7 @@ export class AppController {
   }
 
   @MessagePattern('receipt.all')
-  async getAllReceipt() {
+  async getAllReceipt(): Promise<Receipt[]> {
     logger.log('Using pattern: receipt.all');
     try {
       return this.appService.getReceipts();
@@ -38,12 +43,14 @@ export class AppController {
   }
 
   @MessagePattern('receipt.all-with-pagination')
-  async getAllReceiptWithPagination(@Payload() data: { query: IQuery }) {
+  async getAllReceiptWithPagination(
+    @Payload() data: { query: IQuery }
+  ): Promise<IPaginatedResponse> {
     logger.log('Using pattern: receipt.all-with-pagination');
     try {
       return this.appService.getAllReceiptWithPagination({
-        page: data?.query?.page || 1,
-        size: data?.query?.size || 5,
+        page: Number(data?.query?.page) || 1,
+        size: Number(data?.query?.size) || 5,
         search: data?.query?.search || '',
         searchField: data?.query?.searchField || '',
         order: data?.query?.order || 'desc',
@@ -63,14 +70,14 @@ export class AppController {
       requesterId: string;
       role: string;
     }
-  ) {
+  ): Promise<IPaginatedResponse> {
     logger.log('Using pattern: receipt.get-receipts-by-userId');
     try {
       return await this.appService.getReceiptsByUserId(
         data.id,
         {
-          page: data?.query?.page || 1,
-          size: data?.query?.size || 5,
+          page: Number(data?.query?.page) || 1,
+          size: Number(data?.query?.size) || 5,
           search: data?.query?.search || '',
           searchField: data?.query?.searchField || '',
           order: data?.query?.order || 'desc',
@@ -86,7 +93,7 @@ export class AppController {
   @MessagePattern('receipt.get-receipt')
   async getReceipt(
     @Payload() data: { id: string; requesterId: string; role: string }
-  ) {
+  ): Promise<Receipt> {
     logger.log('Using pattern: receipt.get-receipt');
     try {
       return this.appService.getReceipt(data.id, data.requesterId, data.role);
@@ -108,7 +115,7 @@ export class AppController {
       paymentGateway: string;
       productList: IProductItem[];
     }
-  ) {
+  ): Promise<Receipt> {
     logger.log('Using pattern: receipt.create');
     try {
       return this.appService.createReceipt(
@@ -127,7 +134,9 @@ export class AppController {
   }
 
   @MessagePattern('receipt.delete')
-  async deleteReceipt(@Payload() data: { receiptId: string }) {
+  async deleteReceipt(
+    @Payload() data: { receiptId: string }
+  ): Promise<boolean> {
     logger.log('Using pattern: receipt.delete');
     try {
       const receiptId = data.receiptId;

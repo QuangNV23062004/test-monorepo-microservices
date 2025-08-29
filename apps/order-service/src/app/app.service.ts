@@ -1,10 +1,15 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import OrderRepository from './repository/order.repository';
 import OrderItemRepository from './repository/order-item.repository';
-import { IProductItem, IQuery } from '@nest-microservices/shared-interfaces';
+import {
+  IPaginatedResponse,
+  IProductItem,
+  IQuery,
+} from '@nest-microservices/shared-interfaces';
 import { PrismaService } from './prisma/prisma.service';
 import { RoleEnum } from '@nest-microservices/shared-enum';
 import { RpcException } from '@nestjs/microservices';
+import { Order } from '@prisma/client';
 @Injectable()
 export class AppService {
   constructor(
@@ -25,10 +30,20 @@ export class AppService {
       });
     }
   }
-  getOrder = async (id: string, requesterId: string, role: string) => {
+  getOrder = async (
+    id: string,
+    requesterId: string,
+    role: string
+  ): Promise<Order> => {
     const order = await this.orderRepository.getById(id, {
       include: {
         orderItems: true,
+        User: true,
+        Receipt: {
+          include: {
+            receiptItems: true,
+          },
+        },
       },
     });
 
@@ -36,7 +51,9 @@ export class AppService {
     return order;
   };
 
-  getOrdersWithPaginations = async (query: IQuery) => {
+  getOrdersWithPaginations = async (
+    query: IQuery
+  ): Promise<IPaginatedResponse> => {
     return this.orderRepository.getAllWithPagination(
       query.page,
       query.size,
@@ -47,21 +64,26 @@ export class AppService {
       {
         ...query.options,
         include: {
+          User: true,
           orderItems: true,
-          receipts: true,
+          Receipt: {
+            include: {
+              receiptItems: true,
+            },
+          },
         },
       }
     );
   };
 
-  getOrderByUserId = async (
+  getOrdersByUserId = async (
     userId: string,
     requesterId: string,
     role: string,
     query: IQuery
-  ) => {
+  ): Promise<IPaginatedResponse> => {
     this.checkOwner(userId, requesterId, role);
-    return this.orderRepository.getOrderByUserId(userId, query);
+    return this.orderRepository.getOrdersByUserId(userId, query);
   };
 
   createOrder = async (
@@ -70,17 +92,17 @@ export class AppService {
     currency: string,
     receiptId: string,
     orderItems: IProductItem[]
-  ) => {
-    console.log('Creating order with data:', {
-      userId,
-      amount,
-      currency,
-      receiptId,
-      orderItems,
-    });
+  ): Promise<Order> => {
+    // console.log('Creating order with data:', {
+    //   userId,
+    //   amount,
+    //   currency,
+    //   receiptId,
+    //   orderItems,
+    // });
 
     return await this.prisma.$transaction(async (tx) => {
-      console.log('Starting transaction...');
+      // console.log('Starting transaction...');
 
       const order = await this.orderRepository.create(
         { userId, amount, currency, receiptId },
@@ -97,23 +119,29 @@ export class AppService {
         orderItemsData,
         tx as any
       );
-      console.log('Order items created');
+      // console.log('Order items created');
 
       const result = await this.orderRepository.getById(
         order.id,
         {
           include: {
+            User: true,
             orderItems: true,
+            Receipt: {
+              include: {
+                receiptItems: true,
+              },
+            },
           },
         },
         tx as any
       );
-      console.log('Final result:', result);
+      // console.log('Final result:', result);
       return result;
     });
   };
 
-  deleteOrder = async (id: string) => {
+  deleteOrder = async (id: string): Promise<boolean> => {
     return await this.prisma.$transaction(async (tx) => {
       await this.orderItemRepository.deleteOrderItems(id, tx as any);
       await this.orderRepository.deleteById(id, tx as any);

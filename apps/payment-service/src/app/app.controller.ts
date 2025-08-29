@@ -30,7 +30,7 @@ export class AppController {
   }
 
   @MessagePattern('payment.ipn')
-  getIpnTemplate() {
+  getIpnTemplate(): string {
     logger.log('Using pattern: payment.ipn');
     try {
       return this.appService.getIpnTemplate();
@@ -40,7 +40,9 @@ export class AppController {
   }
 
   @MessagePattern('payment.redirect')
-  async paymentRedirect(@Payload() data: { data: object; success: boolean }) {
+  async paymentRedirect(
+    @Payload() data: { data: object; success: boolean }
+  ): Promise<string> {
     logger.log('Using pattern: payment.redirect');
     try {
       return await this.appService.paymentRedirect(data.data, data.success);
@@ -50,7 +52,7 @@ export class AppController {
   }
 
   @MessagePattern('payment.send-data-to-queue')
-  async sendDataToQueue(data: object) {
+  async sendDataToQueue(data: object): Promise<boolean> {
     logger.log('Using pattern: payment.send-data-to-queue');
     try {
       await this.queueService.sendDataToQueue(data);

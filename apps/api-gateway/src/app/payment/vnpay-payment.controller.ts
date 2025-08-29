@@ -17,7 +17,7 @@ import { CreatePaymentDto } from './dtos/create-payment.dto';
 import { AuthGuard } from '@nest-microservices/shared-guards';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { errorHandler } from '../../utils/error-handler';
+import { errorHandler } from '../../utils/error-handler.utils';
 import {
   IAuthenticatedRequest,
   IProductItem,
@@ -25,6 +25,7 @@ import {
 import dotenv from 'dotenv';
 import { PaymentModeEnum } from '@nest-microservices/shared-enum';
 import { PaymentHelper } from './utils/payment-helper.utils';
+import { MICROSERVICE_CLIENTS } from '../../utils/client-register.utils';
 dotenv.config();
 
 const logger = new Logger('ApiGateway - VnpayController');
@@ -32,9 +33,12 @@ const logger = new Logger('ApiGateway - VnpayController');
 @Controller('payment/vnpay')
 export class VnpayController {
   constructor(
-    @Inject('PAYMENT_SERVICE') private readonly paymentClient: ClientProxy,
-    @Inject('PRODUCT_SERVICE') private readonly productClient: ClientProxy,
-    @Inject('USER_SERVICE') private readonly userClient: ClientProxy,
+    @Inject(MICROSERVICE_CLIENTS.PAYMENT_SERVICE)
+    private readonly paymentClient: ClientProxy,
+    @Inject(MICROSERVICE_CLIENTS.PRODUCT_SERVICE)
+    private readonly productClient: ClientProxy,
+    @Inject(MICROSERVICE_CLIENTS.USER_SERVICE)
+    private readonly userClient: ClientProxy,
     private readonly paymentHelper: PaymentHelper
   ) {}
   @Post('create')
@@ -108,7 +112,8 @@ export class VnpayController {
         await this.paymentHelper.updateUserBalance(
           data.userId,
           Math.round(data.amount * data.currentExchangeRate * 100) / 100,
-          PaymentModeEnum.REFUND
+          PaymentModeEnum.REFUND,
+          data
         );
       }
     }

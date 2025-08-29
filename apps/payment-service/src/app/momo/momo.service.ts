@@ -5,6 +5,7 @@ import {
 } from '../../utils/payment.utils';
 import { IProductItem } from '@nest-microservices/shared-interfaces';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { QueueData } from '../../types/IQueueData';
 
 @Injectable()
 export class MomoService {
@@ -13,7 +14,7 @@ export class MomoService {
     productList: IProductItem[],
     redirect: string,
     ipn: string
-  ) => {
+  ): Promise<string> => {
     let total = 0;
 
     productList.map((p) => {
@@ -24,11 +25,15 @@ export class MomoService {
     return url;
   };
 
-  verifyMomoSignature = async (data: any, redirect: string, ipn: string) => {
+  verifyMomoSignature = async (
+    data: any,
+    redirect: string,
+    ipn: string
+  ): Promise<boolean> => {
     return await verifyMomoIpnSignature(data, redirect, ipn);
   };
 
-  extractIpnBody = async (data: any) => {
+  extractIpnBody = async (data: any): Promise<QueueData> => {
     const extraData = JSON.parse(data.extraData);
     const userId = extraData.userId;
     const amount = data.amount;

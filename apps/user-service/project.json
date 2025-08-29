@@ -6,10 +6,19 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "@nx/webpack:webpack",
       "options": {
-        "command": "webpack-cli build",
-        "args": ["--node-env=production"]
+        "webpackConfig": "apps/user-service/webpack.config.js",
+        "outputPath": "dist/apps/user-service",
+        "main": "apps/user-service/src/main.ts",
+        "tsConfig": "apps/user-service/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*.ejs",
+            "input": "apps/user-service/src/templates",
+            "output": "templates"
+          }
+        ]
       },
       "configurations": {
         "development": {

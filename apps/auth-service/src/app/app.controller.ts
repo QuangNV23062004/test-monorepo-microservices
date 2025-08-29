@@ -1,13 +1,14 @@
 import { Controller, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
+import { User } from '@prisma/client';
 
 const logger = new Logger('AuthService');
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  private handleError(error: unknown, message: string) {
+  private handleError(error: unknown, message: string): RpcException {
     logger.error(error);
     if (error instanceof RpcException) {
       throw error;
@@ -31,7 +32,7 @@ export class AppController {
       password: string;
       redirectUrl: string;
     }
-  ) {
+  ): Promise<{ message: string }> {
     logger.log('Using pattern: auth.register ');
     try {
       return this.appService.register(
@@ -48,7 +49,9 @@ export class AppController {
   }
 
   @MessagePattern('auth.login')
-  async login(@Payload() loginDto: { email: string; password: string }) {
+  async login(
+    @Payload() loginDto: { email: string; password: string }
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     logger.log('Using pattern: auth.login');
     try {
       return this.appService.login(loginDto.email, loginDto.password);
@@ -58,7 +61,9 @@ export class AppController {
   }
 
   @MessagePattern('auth.verify-token')
-  async verifyAccessToken(@Payload() data: { token: string }) {
+  async verifyAccessToken(
+    @Payload() data: { token: string }
+  ): Promise<{ userId: string; role: string }> {
     logger.log('Using pattern: auth.verify-token ');
     try {
       return this.appService.verifyAccessToken(data.token);
@@ -68,7 +73,9 @@ export class AppController {
   }
 
   @MessagePattern('auth.verify-email')
-  async verifyEmail(@Payload() data: { token: string }) {
+  async verifyEmail(
+    @Payload() data: { token: string }
+  ): Promise<{ message: string; userId: string }> {
     logger.log('Using pattern: auth.verify-email ');
     try {
       return this.appService.confirmEmailToken(data.token);
@@ -78,7 +85,9 @@ export class AppController {
   }
 
   @MessagePattern('auth.renew-tokens')
-  async renewAccessAndRefreshToken(@Payload() data: { token: string }) {
+  async renewAccessAndRefreshToken(
+    @Payload() data: { token: string }
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     logger.log('Using pattern: auth.renew-tokens ');
     try {
       return this.appService.renewAccessTokenAndRefreshToken(data.token);
@@ -88,7 +97,9 @@ export class AppController {
   }
 
   @MessagePattern('auth.me')
-  async getUserByAccessToken(@Payload() data: { token: string }) {
+  async getUserByAccessToken(
+    @Payload() data: { token: string }
+  ): Promise<User | null> {
     logger.log('Using pattern: auth.me ');
     try {
       return this.appService.getUserByAccessToken(data.token);
@@ -98,7 +109,9 @@ export class AppController {
   }
 
   @MessagePattern('auth.reverify')
-  async reverifyUser(@Payload() data: { email: string; redirectUrl: string }) {
+  async reverifyUser(
+    @Payload() data: { email: string; redirectUrl: string }
+  ): Promise<{ message: string }> {
     try {
       return await this.appService.reverifyEmail(data.email, data.redirectUrl);
     } catch (error) {

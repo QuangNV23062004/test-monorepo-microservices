@@ -1,22 +1,80 @@
+import ejs from 'ejs';
+import nodemailer from 'nodemailer';
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { UserRepository } from './repository/user.repository';
 import {
   IPaginatedResponse,
   IQuery,
 } from '@nest-microservices/shared-interfaces';
-import { User } from '@prisma/client';
+import { Order, User } from '@prisma/client';
 import { RpcException } from '@nestjs/microservices';
 import { RoleEnum } from '@nest-microservices/shared-guards';
 import * as bcrypt from 'bcrypt';
 import { PaymentModeEnum } from '@nest-microservices/shared-enum';
+import path from 'path';
+import { ConfigService } from '@nestjs/config';
+import Mail from 'nodemailer/lib/mailer';
+
+const refundTemplate = path.resolve(
+  __dirname,
+  './templates/refundNotification.template.ejs'
+);
 
 @Injectable()
 export class AppService {
   private readonly logger = new Logger(AppService.name);
 
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly configService: ConfigService
+  ) {}
   getData(): { message: string } {
     return { message: 'Hello API' };
+  }
+
+  private async sendVerificationEmail(
+    email: string,
+    name: string,
+    queueData: object,
+    links: object,
+    companyInfo: object
+  ): Promise<void> {
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: this.configService.get<string>('EMAIL_USERNAME'),
+        pass: this.configService.get<string>('EMAIL_PASSWORD'),
+      },
+    });
+
+    const companyName = this.configService.get<string>('COMPANY_NAME');
+    const html = await ejs.renderFile(refundTemplate, {
+      companyName,
+      customer: { name: name },
+      queueData,
+      links,
+      companyInfo,
+    });
+
+    const options: Mail.Options = {
+      from: this.configService.get<string>('EMAIL_USERNAME'),
+      to: email,
+      subject: 'Refund notification',
+      text: 'Refund notification',
+      html: html,
+    };
+
+    await transporter.sendMail(options);
+
+    transporter.verify((error, success) => {
+      if (error) {
+        this.logger.error('SMTP verification failed:', error);
+      } else {
+        this.logger.log('SMTP server is ready to take messages');
+      }
+    });
   }
 
   private checkRequester = async (
@@ -169,7 +227,8 @@ export class AppService {
   updateUserBalance = async (
     id: string,
     amount: number,
-    mode: string
+    mode: string,
+    queueData?: object
   ): Promise<User> => {
     const user = await this.userRepository.getById(id);
     if (!user) {
@@ -195,6 +254,29 @@ export class AppService {
         break;
 
       case PaymentModeEnum.REFUND:
+        if (queueData) {
+          const links = {
+            shop: this.configService.get<string>('SHOP_URL'),
+            accountBalance: this.configService.get<string>(
+              'ACCOUNT_BALANCE_URL'
+            ),
+            support: this.configService.get<string>('SUPPORT_URL'),
+          };
+
+          const companyInfo = {
+            email: this.configService.get<string>('EMAIL_USERNAME'),
+            phone: this.configService.get<string>('PHONE_NUMBER'),
+            supportHours: this.configService.get<string>('SUPPORT_HOURS'),
+          };
+
+          await this.sendVerificationEmail(
+            user.email,
+            user.name,
+            queueData,
+            links,
+            companyInfo
+          );
+        }
         newBalance = Number(user.refundBalance) + amount;
         break;
 

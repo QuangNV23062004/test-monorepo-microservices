@@ -162,7 +162,10 @@ export class AppService {
     return { accessToken, refreshToken };
   };
 
-  reverifyEmail = async (email: string, redirectUrl: string) => {
+  reverifyEmail = async (
+    email: string,
+    redirectUrl: string
+  ): Promise<{ message: string }> => {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
       throw new RpcException({
@@ -192,7 +195,9 @@ export class AppService {
     return { message: 'Verification email sent successfully' };
   };
 
-  confirmEmailToken = async (token: string) => {
+  confirmEmailToken = async (
+    token: string
+  ): Promise<{ message: string; userId: string }> => {
     const payload = await this.jwtService.verify(token, {
       secret: this.configService.get<string>('VERIFICATION_SECRET'),
     });
@@ -241,7 +246,24 @@ export class AppService {
       if (!payload.userId || !payload.role) {
         throw new RpcException({
           message: 'Invalid access token',
-          code: HttpStatus.BAD_REQUEST,
+          code: HttpStatus.UNAUTHORIZED,
+          location: 'AuthService',
+        });
+      }
+
+      const user = await this.userRepository.getById(payload.userId);
+      if (!user) {
+        throw new RpcException({
+          message: 'Invalid userId from token',
+          code: HttpStatus.UNAUTHORIZED,
+          location: 'AuthService',
+        });
+      }
+
+      if (user.role !== payload.role) {
+        throw new RpcException({
+          message: 'Token data has changed, please login again',
+          code: HttpStatus.UNAUTHORIZED,
           location: 'AuthService',
         });
       }
@@ -289,7 +311,7 @@ export class AppService {
       });
     }
 
-    const newPayload = { id: user.id, role: user.role };
+    const newPayload = { userId: user.id, role: user.role };
     const accessSecret = this.configService.get<string>('ACCESS_SECRET');
     const accessExpires = this.configService.get<string>('ACCESS_EXPIRES_IN');
     const accessToken = this.generateToken(

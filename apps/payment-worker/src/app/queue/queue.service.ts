@@ -3,7 +3,7 @@ import { closeConnection, createConnection } from '../../utils/queue.utils';
 import { RpcException } from '@nestjs/microservices';
 
 const logger = new Logger('PaymentWorker - QueueService');
-const PAYMENT_QUEUE_NAME = 'Payment_queue';
+const PAYMENT_QUEUE_NAME = process.env.PAYMENT_QUEUE_NAME || 'Payment_queue';
 
 @Injectable()
 export class QueueService {

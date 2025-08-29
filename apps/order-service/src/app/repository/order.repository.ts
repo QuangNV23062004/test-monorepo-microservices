@@ -1,4 +1,7 @@
-import { IQuery } from '@nest-microservices/shared-interfaces';
+import {
+  IPaginatedResponse,
+  IQuery,
+} from '@nest-microservices/shared-interfaces';
 import { BaseRepository } from '@nest-microservices/shared-repository';
 import { Injectable } from '@nestjs/common';
 import { Order } from '@prisma/client';
@@ -10,18 +13,42 @@ export default class OrderRepository extends BaseRepository<Order> {
     super(prisma, 'order');
   }
 
-  async getOrderByUserId(userId: string, query: IQuery) {
-    return this.getModel().findMany({
+  async getOrdersByUserId(
+    userId: string,
+    query: IQuery
+  ): Promise<IPaginatedResponse> {
+    const orders = await this.getModel().findMany({
       where: {
         userId,
+        isDeleted: false,
       },
       take: query.size,
       skip: (query.page - 1) * query.size,
       orderBy: { [query.sortBy]: query.order },
       include: {
+        User: true,
         orderItems: true,
-        receipts: true,
+        Receipt: {
+          include: {
+            receiptItems: true,
+          },
+        },
       },
     });
+
+    const total = await this.getModel().count({
+      where: {
+        userId,
+        isDeleted: false,
+      },
+    });
+
+    return {
+      data: orders,
+      page: query.page,
+      size: query.size,
+      totalPage: Math.ceil(total / query.size),
+      total: total,
+    };
   }
 }

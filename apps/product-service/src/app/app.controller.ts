@@ -1,7 +1,12 @@
 import { Controller, Get, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { IProductItem, IQuery } from '@nest-microservices/shared-interfaces';
+import {
+  IPaginatedResponse,
+  IProductItem,
+  IQuery,
+} from '@nest-microservices/shared-interfaces';
+import { Product } from '@prisma/client';
 
 const logger = new Logger('ProductService');
 
@@ -9,7 +14,7 @@ const logger = new Logger('ProductService');
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  private handleError(error: unknown, message: string) {
+  private handleError(error: unknown, message: string): RpcException {
     logger.error(error);
     if (error instanceof RpcException) {
       throw error;
@@ -23,7 +28,9 @@ export class AppController {
   }
 
   @MessagePattern('product.get-all')
-  async getProducts(@Payload() data: { query: IQuery }) {
+  async getProducts(
+    @Payload() data: { query: IQuery }
+  ): Promise<IPaginatedResponse> {
     logger.log('Using pattern: product.get-all');
     try {
       return await this.appService.getProducts({
@@ -41,7 +48,7 @@ export class AppController {
   }
 
   @MessagePattern('product.get-by-id')
-  async getProduct(@Payload() data: { id: string }) {
+  async getProduct(@Payload() data: { id: string }): Promise<Product> {
     logger.log('Using pattern: product.get-by-id');
     try {
       return this.appService.getProduct(data.id);
@@ -60,7 +67,7 @@ export class AppController {
       price: number;
       currentPrice: number;
     }
-  ) {
+  ): Promise<Product> {
     logger.log('Using pattern: product.create');
     try {
       return this.appService.createProduct(
@@ -86,7 +93,7 @@ export class AppController {
       price?: number;
       currentPrice?: number;
     }
-  ) {
+  ): Promise<Product> {
     logger.log('Using pattern: product.update');
     try {
       return await this.appService.updateProduct(
@@ -105,7 +112,7 @@ export class AppController {
   @MessagePattern('product.update-quantity')
   async updateProductQuantity(
     @Payload() data: { productList: IProductItem[]; mode: string }
-  ) {
+  ): Promise<Product[]> {
     logger.log('Using pattern: product.update-quantity');
     try {
       return await this.appService.updateProductsQuantity(
@@ -118,7 +125,7 @@ export class AppController {
   }
 
   @MessagePattern('product.delete')
-  async deleteProduct(@Payload() data: { id: string }) {
+  async deleteProduct(@Payload() data: { id: string }): Promise<boolean> {
     logger.log('Using pattern: product.delete');
     try {
       return await this.appService.deleteProduct(data.id);
@@ -128,7 +135,9 @@ export class AppController {
   }
 
   @MessagePattern('product.check-product-list')
-  async checkProductList(@Payload() data: { productList: IProductItem[] }) {
+  async checkProductList(
+    @Payload() data: { productList: IProductItem[] }
+  ): Promise<Product[]> {
     logger.log('Using pattern: product.check-product-list');
     try {
       return this.appService.checkProductList(data.productList);

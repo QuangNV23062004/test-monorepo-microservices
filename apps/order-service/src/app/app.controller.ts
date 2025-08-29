@@ -1,7 +1,12 @@
 import { Controller, Get, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { IProductItem, IQuery } from '@nest-microservices/shared-interfaces';
+import {
+  IPaginatedResponse,
+  IProductItem,
+  IQuery,
+} from '@nest-microservices/shared-interfaces';
+import { Order } from '@prisma/client';
 
 const logger = new Logger('OrderService');
 @Controller()
@@ -29,16 +34,16 @@ export class AppController {
       requesterId: string;
       role: string;
     }
-  ) {
+  ): Promise<IPaginatedResponse> {
     logger.log('Using pattern: order.get-by-userId');
     try {
-      return this.appService.getOrderByUserId(
+      return this.appService.getOrdersByUserId(
         data.userId,
         data.requesterId,
         data.role,
         {
-          page: data?.query?.page || 1,
-          size: data?.query?.size || 5,
+          page: Number(data?.query?.page) || 1,
+          size: Number(data?.query?.size) || 5,
           sortBy: data?.query?.sortBy || 'createdAt',
           order: data?.query?.order || 'desc',
           search: data?.query?.search || '',
@@ -53,7 +58,7 @@ export class AppController {
   @MessagePattern('order.get-by-id')
   async getOrder(
     @Payload() data: { id: string; requesterId: string; role: string }
-  ) {
+  ): Promise<Order> {
     logger.log('Using pattern: order.get-by-id');
     try {
       return this.appService.getOrder(data.id, data.requesterId, data.role);
@@ -63,12 +68,14 @@ export class AppController {
   }
 
   @MessagePattern('order.get-all-with-pagination')
-  async getOrders(@Payload() data: { query: IQuery }) {
+  async getOrders(
+    @Payload() data: { query: IQuery }
+  ): Promise<IPaginatedResponse> {
     logger.log('Using pattern: order.get-all-with-pagination');
     try {
       return await this.appService.getOrdersWithPaginations({
-        page: data?.query?.page || 1,
-        size: data?.query?.size || 5,
+        page: Number(data?.query?.page) || 1,
+        size: Number(data?.query?.size) || 5,
         sortBy: data?.query?.sortBy || 'createdAt',
         order: data?.query?.order || 'desc',
         search: data?.query?.search || '',
@@ -89,7 +96,7 @@ export class AppController {
       receiptId: string;
       orderItem: IProductItem[];
     }
-  ) {
+  ): Promise<Order> {
     logger.log('Using pattern: order.create');
     logger.log('Order data received:', JSON.stringify(data, null, 2));
 
@@ -102,10 +109,6 @@ export class AppController {
         data.orderItem
       );
 
-      logger.log(
-        'Order created successfully:',
-        JSON.stringify(result, null, 2)
-      );
       return result;
     } catch (error) {
       logger.error('Error creating order:', error);
@@ -114,7 +117,7 @@ export class AppController {
   }
 
   @MessagePattern('order.delete')
-  async deleteOrder(@Payload() data: { orderId: string }) {
+  async deleteOrder(@Payload() data: { orderId: string }): Promise<boolean> {
     logger.log('Using pattern: order.delete');
     try {
       return await this.appService.deleteOrder(data.orderId);

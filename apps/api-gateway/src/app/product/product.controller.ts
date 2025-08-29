@@ -22,11 +22,13 @@ import {
 } from '@nest-microservices/shared-guards';
 import { Roles } from '@nest-microservices/shared-decorators';
 import { ApiQuery } from '@nestjs/swagger';
+import { MICROSERVICE_CLIENTS } from '../../utils/client-register.utils';
 
 @Controller('product')
 export class ProductController {
   constructor(
-    @Inject('PRODUCT_SERVICE') private readonly productClient: ClientProxy
+    @Inject(MICROSERVICE_CLIENTS.PRODUCT_SERVICE)
+    private readonly productClient: ClientProxy
   ) {}
 
   @Get()
@@ -133,8 +135,10 @@ export class ProductController {
   @UseGuards(AuthGuard, RoleGuard)
   @Delete(':id')
   async deleteProduct(@Param('id') id: string) {
-    return await firstValueFrom(
+    const status = await firstValueFrom(
       this.productClient.send('product.delete', { id })
     );
+
+    return { deleted: status, message: 'Product deleted successfully' };
   }
 }

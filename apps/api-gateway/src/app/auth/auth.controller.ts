@@ -10,18 +10,20 @@ import {
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { errorHandler } from '../../utils/error-handler';
+import { errorHandler } from '../../utils/error-handler.utils';
 import { AuthGuard } from '@nest-microservices/shared-guards';
 import { IAuthenticatedRequest } from '@nest-microservices/shared-interfaces';
 import { LoginDto } from './dtos/login.dto';
 import { RegisterDto } from './dtos/register.dto';
 import { RenewTokensDto } from './dtos/renew-token.dto';
 import { ReverifyDto } from './dtos/reverify.dto';
+import { MICROSERVICE_CLIENTS } from '../../utils/client-register.utils';
 
 @Controller('auth')
 export class AuthController {
   constructor(
-    @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy
+    @Inject(MICROSERVICE_CLIENTS.AUTH_SERVICE)
+    private readonly authClient: ClientProxy
   ) {}
 
   @Post('register')
