@@ -101,7 +101,7 @@ export class AppService implements OnModuleInit {
       const refundAmount =
         Math.round(data.amount * data.currentExchangeRate * 100) / 100;
       // Initiate refund
-      await this.refundUser(data.userId, refundAmount);
+      await this.refundUser(data.userId, refundAmount, data);
 
       throw error; // Re-throw so queue service can handle it
     }
@@ -147,13 +147,18 @@ export class AppService implements OnModuleInit {
     );
   }
 
-  private async refundUser(id: string, amount: number): Promise<void> {
+  private async refundUser(
+    id: string,
+    amount: number,
+    data: object
+  ): Promise<void> {
     try {
       await firstValueFrom(
         this.userClient.send('user.update-balance', {
           id,
           amount,
           mode: PaymentModeEnum.REFUND,
+          queueData: data,
         })
       );
     } catch (error) {

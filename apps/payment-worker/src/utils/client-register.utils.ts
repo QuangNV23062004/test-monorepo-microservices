@@ -27,7 +27,7 @@ export const MicroserviceClients: ClientsModuleOptions = [
     MICROSERVICE_CLIENTS.ORDER_SERVICE,
     Number(process.env.ORDER_SERVICE_TRANSPORT) || Transport.TCP,
     process.env.ORDER_SERVICE_HOST || 'localhost',
-    Number(process.env.ORDER_SERVICE_HOST) || 3006
+    Number(process.env.ORDER_SERVICE_PORT) || 3006
   ),
   getClient(
     MICROSERVICE_CLIENTS.PRODUCT_SERVICE,

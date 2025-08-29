@@ -68,13 +68,15 @@ export class PaymentHelper {
   async updateUserBalance(
     userId: string,
     amount: string | number,
-    mode: string
+    mode: string,
+    data: object
   ) {
     await firstValueFrom(
       this.userClient.send('user.update-balance', {
         id: userId,
         amount: Number(amount),
         mode: mode,
+        queueData: data,
       })
     );
   }

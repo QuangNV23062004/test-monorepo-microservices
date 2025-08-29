@@ -12,6 +12,7 @@ import { ConfigModule } from '@nestjs/config';
     }),
     PrismaModule, // Import PrismaModule here since it's global
     UserModule,
+    ConfigModule,
   ],
   controllers: [AppController],
   providers: [AppService],

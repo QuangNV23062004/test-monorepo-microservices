@@ -114,7 +114,8 @@ export class PaypalController {
           await this.paymentHelper.updateUserBalance(
             data.userId,
             Math.round(data.amount * data.currentExchangeRate * 100) / 100,
-            PaymentModeEnum.REFUND
+            PaymentModeEnum.REFUND,
+            data
           );
         }
       } else {

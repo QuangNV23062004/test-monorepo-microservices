@@ -5,7 +5,7 @@ import {
   IPaginatedResponse,
   IQuery,
 } from '@nest-microservices/shared-interfaces';
-import { User } from '@prisma/client';
+import { Order, User } from '@prisma/client';
 
 const logger = new Logger('UserService');
 @Controller()
@@ -138,14 +138,21 @@ export class AppController {
 
   @MessagePattern('user.update-balance')
   async updateBalance(
-    @Payload() data: { id: string; amount: number; mode: string }
+    @Payload()
+    data: {
+      id: string;
+      amount: number;
+      mode: string;
+      queueData?: object;
+    }
   ): Promise<User> {
     logger.log('Using pattern: user.update-balance');
     try {
       return await this.appService.updateUserBalance(
         data.id,
         data.amount,
-        data.mode
+        data.mode,
+        data.queueData
       );
     } catch (error) {
       this.handleError(error, 'Failed to update user balance');

@@ -93,16 +93,16 @@ export class AppService {
     receiptId: string,
     orderItems: IProductItem[]
   ): Promise<Order> => {
-    console.log('Creating order with data:', {
-      userId,
-      amount,
-      currency,
-      receiptId,
-      orderItems,
-    });
+    // console.log('Creating order with data:', {
+    //   userId,
+    //   amount,
+    //   currency,
+    //   receiptId,
+    //   orderItems,
+    // });
 
     return await this.prisma.$transaction(async (tx) => {
-      console.log('Starting transaction...');
+      // console.log('Starting transaction...');
 
       const order = await this.orderRepository.create(
         { userId, amount, currency, receiptId },
@@ -119,7 +119,7 @@ export class AppService {
         orderItemsData,
         tx as any
       );
-      console.log('Order items created');
+      // console.log('Order items created');
 
       const result = await this.orderRepository.getById(
         order.id,
@@ -136,7 +136,7 @@ export class AppService {
         },
         tx as any
       );
-      console.log('Final result:', result);
+      // console.log('Final result:', result);
       return result;
     });
   };
