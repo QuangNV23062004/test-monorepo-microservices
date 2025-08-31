@@ -109,6 +109,10 @@ export class AppController {
         data.orderItem
       );
 
+      // logger.log(
+      //   'Order created successfully:',
+      //   JSON.stringify(result, null, 2)
+      // );
       return result;
     } catch (error) {
       logger.error('Error creating order:', error);
