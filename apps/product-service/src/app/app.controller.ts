@@ -7,12 +7,16 @@ import {
   IQuery,
 } from '@nest-microservices/shared-interfaces';
 import { Product } from '@prisma/client';
+import { RedisService } from './redis/redis.service';
 
 const logger = new Logger('ProductService');
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private readonly redisService: RedisService
+  ) {}
 
   private handleError(error: unknown, message: string): RpcException {
     logger.error(error);
@@ -33,15 +37,47 @@ export class AppController {
   ): Promise<IPaginatedResponse> {
     logger.log('Using pattern: product.get-all');
     try {
-      return await this.appService.getProducts({
-        page: data?.query?.page || 1,
-        size: data?.query?.size || 5,
+      const isBaseQuery =
+        (!data?.query?.page || Number(data?.query?.page) < 6) &&
+        (!data?.query?.size || Number(data?.query?.size) === 5) &&
+        (!data?.query?.search || data?.query?.search === '') &&
+        (!data?.query?.order || data?.query?.order === 'asc') &&
+        (!data?.query?.sortBy || data?.query?.sortBy === 'createdAt') &&
+        !data?.query?.options;
+
+      let products;
+
+      if (isBaseQuery) {
+        const cached = await this.redisService.get(
+          `product.page:${data?.query?.page || 1}`
+        );
+        if (cached) {
+          products = JSON.parse(cached);
+          return products;
+        }
+      }
+
+      products = await this.appService.getProducts({
+        page: Number(data?.query?.page) || 1,
+        size: Number(data?.query?.size) || 5,
         search: data?.query?.search || '',
         searchField: data?.query?.searchField || 'name',
         order: data?.query?.order || 'asc',
         sortBy: data?.query?.sortBy || 'createdAt',
         options: data?.query?.options,
       });
+
+      if (
+        products.page < 6 &&
+        products.total >= products.page * products.size &&
+        isBaseQuery
+      ) {
+        this.redisService.set(
+          `product.page:${products.page}`,
+          JSON.stringify(products)
+        );
+      }
+      return products;
     } catch (error) {
       this.handleError(error, 'Failed to get products');
     }
